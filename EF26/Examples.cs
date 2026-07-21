@@ -42,4 +42,25 @@ internal class Examples
             Console.WriteLine($"Error saving changes: {ex.Message}");
         }
     }
+
+    public static void HledaniOsobyDleId()
+    {
+        var db = new PeopleDbContext();
+        int id = 6000;
+
+        var person = db.Persons
+            .Where(p => p.Id == id)
+            .FirstOrDefault();
+
+        if (person != null)
+        {
+            Console.WriteLine($"Person found: {person.FirstName} {person.LastName}, Email: {person.Email}");
+        }
+        else
+        {
+            Console.WriteLine($"Person NOT found with Id = {id}");
+        }
+
+    }
+
 }

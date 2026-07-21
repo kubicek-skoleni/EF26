@@ -36,5 +36,5 @@ public class Person
 
     public Address? Address { get; set; }
 
-    public List<Contract> Contracts { get; set; }
+    public ICollection<Contract> Contracts { get; set; } = new HashSet<Contract>(); // inicializace listu aby nespadl na null pri prochazeni pokud neobsahuje smlouvy
 }
