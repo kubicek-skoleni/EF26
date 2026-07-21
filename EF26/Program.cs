@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Model;
 
 var db = new PeopleDbContext();
-int id = 500;
+int id = 6000;
 
 var person = db.Persons
     .Include(x => x.Address)
     .Include(x => x.Contracts)
     .Where(p => p.Id == id)
-    .FirstOrDefault();
+    .SingleOrDefault();
 
 if (person != null)
 {
