@@ -27,7 +27,12 @@ public class Person
     public DateTime DateOfBirth { get; set; }
 
     [NotMapped]
-    public int Age { get => DateTime.Now.Year - DateOfBirth.Year; }
+    public int Age 
+    { get => DateTime.Now.Year - DateOfBirth.Year; 
+        set {
+            DateOfBirth = DateTime.Now.AddYears(-value);
+        }
+    }
 
     public Address? Address { get; set; }
 
