@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Include · AsNoTracking · AsSplitQuery – Školení EF Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;
+  --panel:#131826;
+  --panel2:#0f1420;
+  --code-bg:#0e1320;
+  --border:rgba(148,163,184,.15);
+  --text:#e8edf6;
+  --muted:#939eb4;
+  --purple:#8b7cf8;
+  --cyan:#38bdf8;
+  --green:#4ade80;
+  --amber:#fbbf24;
+  --rose:#fb7185;
+  --blue:#7aa2ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0}
+#deck{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;background:var(--bg);border-radius:0;overflow:hidden}
+/* dekorativní pozadí */
+#deck::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(148,163,184,.055) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 90% 80% at 50% 45%,#000 30%,transparent 100%);pointer-events:none}
+.glow{position:absolute;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.glow.g1{width:520px;height:520px;right:-160px;top:-200px;background:rgba(139,124,248,.17)}
+.glow.g2{width:460px;height:460px;left:-170px;bottom:-210px;background:rgba(56,189,248,.11)}
+
+/* ====== slidy ====== */
+.slide{position:absolute;inset:0;padding:52px 74px 66px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .38s ease,transform .38s ease,visibility .38s;z-index:1}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide > header{margin-bottom:24px;flex:none}
+.slide h2{font-size:39px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-top:10px}
+.slide h2 .dim{color:var(--muted);font-weight:600}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+
+.badge{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:5px 13px;border-radius:999px;border:1px solid}
+.b-zaklady{color:#af9fff;background:rgba(139,124,248,.12);border-color:rgba(139,124,248,.4)}
+.b-pristupy{color:#67cdf8;background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.4)}
+.b-praxe{color:#6ee79c;background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.38)}
+.b-tipy{color:#fcd253;background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.38)}
+.b-pokrocile{color:#fc94a2;background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.4)}
+.b-zaver{color:#9db8ff;background:rgba(122,162,255,.10);border-color:rgba(122,162,255,.4)}
+
+/* layouty */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;min-height:0;align-content:start}
+.two.w64{grid-template-columns:1.55fr 1fr}
+.two.w46{grid-template-columns:1fr 1.55fr}
+.stack{display:flex;flex-direction:column;gap:16px;min-height:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+ul.list{list-style:none}
+ul.list li{position:relative;padding-left:26px;margin-bottom:13px;font-size:20px;line-height:1.42;color:var(--text)}
+ul.list li::before{content:'▸';position:absolute;left:2px;top:0;color:var(--purple);font-weight:700}
+ul.list li strong{font-weight:700;color:#fff}
+ul.list.compact li{font-size:18px;margin-bottom:10px}
+ul.list li .sub{display:block;font-size:16px;color:var(--muted);margin-top:2px;line-height:1.4}
+.mut{color:var(--muted)}
+.hl-p{color:#af9fff;font-weight:600}.hl-c{color:#67cdf8;font-weight:600}.hl-g{color:#6ee79c;font-weight:600}.hl-a{color:#fcd253;font-weight:600}.hl-r{color:#fc94a2;font-weight:600}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:17px 19px}
+.card h4{font-size:18px;font-weight:700;margin-bottom:6px}
+.card p{font-size:15.5px;color:var(--muted);line-height:1.42}
+.callout{border-left:3px solid var(--purple);background:rgba(139,124,248,.09);padding:13px 18px;border-radius:0 12px 12px 0;font-size:18.5px;line-height:1.45}
+.callout.cyan{border-color:var(--cyan);background:rgba(56,189,248,.08)}
+.callout.green{border-color:var(--green);background:rgba(74,222,128,.08)}
+.callout.amber{border-color:var(--amber);background:rgba(251,191,36,.08)}
+.callout.rose{border-color:var(--rose);background:rgba(251,113,133,.08)}
+.callout b{color:#fff}
+
+/* kód */
+.codebox{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.codehead{display:flex;align-items:center;gap:8px;padding:9px 15px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.codehead .dots{display:flex;gap:5px}
+.codehead .dots i{width:9px;height:9px;border-radius:50%;display:block}
+.codehead .dots i:nth-child(1){background:#f66} .codehead .dots i:nth-child(2){background:#fb5} .codehead .dots i:nth-child(3){background:#5c5}
+.codehead span{font:600 12.5px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.03em}
+pre.code{font:400 16.5px/1.55 'JetBrains Mono',Consolas,monospace;padding:13px 18px;overflow:hidden;tab-size:4;white-space:pre;color:#dce3f0}
+pre.code.small{font-size:15px;line-height:1.5}
+pre.code.big{font-size:18px;line-height:1.6}
+.code .k{color:#c79bff}
+.code .t{color:#5eead4}
+.code .s{color:#9ece6a}
+.code .c{color:#5f6b80;font-style:italic}
+.code .f{color:#82aaff}
+.code .n{color:#ff9e64}
+.code .flag{color:#5eead4}
+.code .cmd{color:#c79bff;font-weight:600}
+.code .err{color:#fc94a2}
+code.inl{font:600 .92em 'JetBrains Mono',monospace;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.25);color:#cdc4ff;padding:1px 7px;border-radius:7px;white-space:nowrap}
+
+/* tabulky */
+table.tbl{width:100%;border-collapse:collapse;font-size:18.5px}
+.tbl th{text-align:left;font-weight:700;color:#c9d3ea;background:rgba(139,124,248,.10);padding:11px 16px;border-bottom:1px solid var(--border)}
+.tbl th:first-child{border-radius:12px 0 0 0}.tbl th:last-child{border-radius:0 12px 0 0}
+.tbl td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
+.tbl td:first-child{color:var(--muted);font-weight:600;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .yes{color:var(--green);font-weight:700}
+.tbl .no{color:var(--rose);font-weight:700}
+.tblwrap{background:var(--panel2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{font-size:15.5px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:#cfd8ea;white-space:nowrap}
+.chip b{color:var(--cyan)}
+
+/* titulní slide */
+.s-title{justify-content:center;align-items:center;text-align:center;padding-bottom:90px}
+.s-title .pill{font:700 14px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#67cdf8;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.35);border-radius:999px;padding:8px 20px;margin-bottom:30px}
+.s-title h1{font-size:78px;font-weight:900;letter-spacing:-2.5px;line-height:1.04;background:linear-gradient(105deg,#fff 20%,#b9aaff 55%,#67cdf8 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.s-title .sub{font-size:25px;color:var(--muted);margin-top:24px;font-weight:500}
+.s-title .meta{margin-top:44px;font-size:16.5px;color:var(--muted);display:flex;gap:14px;align-items:center}
+.s-title .meta i{width:5px;height:5px;border-radius:50%;background:var(--purple);display:inline-block}
+
+/* agenda */
+.agenda{display:flex;flex-direction:column;gap:15px;flex:1;justify-content:center;max-width:960px}
+.agenda .it{display:flex;align-items:center;gap:22px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 24px}
+.agenda .num{font:800 25px 'JetBrains Mono',monospace;width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.agenda .it h3{font-size:22.5px;font-weight:700}
+.agenda .it p{font-size:16px;color:var(--muted);margin-top:2px}
+.n1{color:#af9fff;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.35)}
+.n2{color:#67cdf8;background:rgba(56,189,248,.11);border:1px solid rgba(56,189,248,.35)}
+.n3{color:#6ee79c;background:rgba(74,222,128,.11);border:1px solid rgba(74,222,128,.32)}
+.n4{color:#fcd253;background:rgba(251,191,36,.11);border:1px solid rgba(251,191,36,.32)}
+.n5{color:#fc94a2;background:rgba(251,113,133,.11);border:1px solid rgba(251,113,133,.35)}
+
+/* diagramy */
+.diag{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.diag svg{width:100%;height:100%;max-height:100%}
+svg text{font-family:'Inter',system-ui,sans-serif}
+svg .mono{font-family:'JetBrains Mono',monospace}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;bottom:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;color:var(--muted);z-index:5;user-select:none}
+#hud .brand{display:flex;gap:9px;align-items:center;font-weight:600;letter-spacing:.02em}
+#hud .brand .dot{width:7px;height:7px;border-radius:2px;background:linear-gradient(135deg,var(--purple),var(--cyan))}
+#hud .right{display:flex;align-items:center;gap:14px}
+#hud .hint{opacity:.6;font-size:12px}
+#counter{font:600 13px 'JetBrains Mono',monospace;min-width:58px;text-align:right}
+.navbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.navbtn:hover{color:#fff;border-color:var(--purple)}
+#bar{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));width:0;transition:width .35s ease;z-index:6;border-radius:0 3px 3px 0}
+
+/* tisk */
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{overflow:visible;background:var(--bg)}
+  #stage{position:static}
+  #deck{position:relative;left:0;top:0;transform:none!important;width:1280px;height:auto;overflow:visible}
+  .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;width:1280px;height:720px;page-break-after:always;break-after:page;overflow:hidden}
+  #hud,#bar,.navbtn{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="deck">
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<!-- ============ 1 · TITULNÍ ============ -->
+<section class="slide s-title">
+  <div class="pill">DOPLNĚK ŠKOLENÍ &nbsp;·&nbsp; EFEKTIVNÍ DOTAZY</div>
+  <h1 style="font-size:64px">Include · AsNoTracking<br>· AsSplitQuery</h1>
+  <div class="sub">Tři metody, které rozhodují o tom, kolik toho EF Core opravdu tahá z&nbsp;databáze</div>
+  <div class="meta"><span>Školení Entity Framework Core</span><i></i><span>EF Core 9 / 10</span><i></i><span>2026</span></div>
+</section>
+
+<!-- ============ 2 · MAPA PROBLÉMŮ ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Motivace</span><h2>Tři nástroje na tři problémy</h2></header>
+  <div class="content stack" style="justify-content:center">
+    <div class="card" style="display:grid;grid-template-columns:1fr 240px;gap:18px;align-items:center;border-color:rgba(56,189,248,.4)">
+      <div><h4 class="hl-c">„Načetl jsem blogy, ale <code class="inl">blog.Posts</code> je prázdné…“</h4>
+      <p style="font-size:16px;margin-top:4px">Navigační vlastnosti se samy nenačítají – a lazy loading ve smyčce znamená N+1 dotazů.</p></div>
+      <div style="text-align:right"><code class="inl" style="font-size:17px;padding:8px 16px">.Include(…)</code></div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:1fr 240px;gap:18px;align-items:center;border-color:rgba(74,222,128,.4)">
+      <div><h4 class="hl-g">„Data jen zobrazuji – proč si je EF všechny pamatuje?“</h4>
+      <p style="font-size:16px;margin-top:4px">Change tracker sleduje každou načtenou entitu. U read-only dotazů je to čistá režie navíc.</p></div>
+      <div style="text-align:right"><code class="inl" style="font-size:17px;padding:8px 16px">.AsNoTracking()</code></div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:1fr 240px;gap:18px;align-items:center;border-color:rgba(251,113,133,.4)">
+      <div><h4 class="hl-r">„Přidal jsem druhý Include a dotaz se strašně zpomalil…“</h4>
+      <p style="font-size:16px;margin-top:4px">Více kolekcí v jednom JOINu = kartézská exploze – počet řádků se násobí.</p></div>
+      <div style="text-align:right"><code class="inl" style="font-size:17px;padding:8px 16px">.AsSplitQuery()</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · INCLUDE ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Include</span><h2>Include <span class="dim">– eager loading souvisejících dat</span></h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>eager loading</span></div>
+<pre class="code small" data-lang="cs">// ❌ navigace se samy nenačítají
+var ble = await db.Blogs.ToListAsync();
+var pocet = ble[0].Posts.Count;      // 0 – nikdo je nenačetl
+                                     // (s lazy loadingem: N+1!)
+
+// ✅ Include – vše v jednom dotazu (JOIN)
+var blogy = await db.Blogs
+    .Include(b =&gt; b.Posts)           // kolekce 1:N
+    .Include(b =&gt; b.Owner)           // reference N:1
+    .ToListAsync();
+
+// ✅ více úrovní – ThenInclude
+var strom = await db.Blogs
+    .Include(b =&gt; b.Posts)
+    .ThenInclude(p =&gt; p.Author)
+    .ToListAsync();</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li><strong>Motivace:</strong> bez Include jsou navigace prázdné – nebo je lazy loading dočítá <strong>po jedné</strong> (N+1)</li>
+        <li><code class="inl">Include</code> řekne EF, co načíst <strong>rovnou s entitou</strong></li>
+        <li><code class="inl">ThenInclude</code> pokračuje o úroveň hlouběji</li>
+        <li>Víc <code class="inl">Include</code> = víc vztahů najednou<span class="sub">ale pozor na více kolekcí – viz AsSplitQuery</span></li>
+      </ul>
+      <div class="callout cyan" style="font-size:16px">Include vrací <b>celé entity</b>. Když potřebujete jen pár sloupců, bývá lepší projekce přes <code class="inl">Select</code>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · FILTERED INCLUDE ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Include</span><h2>Filtrovaný Include <span class="dim">a AutoInclude</span></h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>jen část kolekce</span></div>
+<pre class="code small" data-lang="cs">// filtrovaný Include – ne celá kolekce
+var blogy = await db.Blogs
+    .Include(b =&gt; b.Posts
+        .Where(p =&gt; !p.IsDraft)
+        .OrderByDescending(p =&gt; p.PublishedOn)
+        .Take(5))                    // top 5 postů na blog
+    .ToListAsync();
+
+// AutoInclude – navigace se načítá vždy (model)
+modelBuilder.Entity&lt;Theme&gt;()
+    .Navigation(t =&gt; t.ColorScheme)
+    .AutoInclude();
+
+// …a vypnutí pro konkrétní dotaz
+var cista = await db.Themes
+    .IgnoreAutoIncludes()
+    .ToListAsync();</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li>Uvnitř Include jde: <code class="inl">Where</code>, <code class="inl">OrderBy(Descending)</code>, <code class="inl">ThenBy</code>, <code class="inl">Skip</code>, <code class="inl">Take</code></li>
+        <li>Typické použití: „posledních 5 komentářů ke každému článku“</li>
+        <li><strong>Pozor s trackingem:</strong> už sledované entity se do kolekce doplní taky (fixup) – přesný výsledek zaručí <code class="inl">AsNoTracking</code></li>
+        <li><code class="inl">AutoInclude</code> šetří psaní u navigací, které chcete <strong>opravdu vždy</strong></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 · ASNOTRACKING ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">No-tracking</span><h2>AsNoTracking <span class="dim">– čtení bez sledování změn</span></h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>read-only dotazy</span></div>
+<pre class="code small" data-lang="cs">// ✅ jen zobrazuji → bez change trackeru
+var blogy = await db.Blogs
+    .AsNoTracking()
+    .ToListAsync();
+
+// výchozí chování pro celý context…
+optionsBuilder.UseQueryTrackingBehavior(
+    QueryTrackingBehavior.NoTracking);
+
+// …a zpět sledování tam, kde edituji
+var blog = await db.Blogs
+    .AsTracking()
+    .FirstAsync(b =&gt; b.Id == id);
+
+blog.Rating = 5;
+await db.SaveChangesAsync();   // vidí jen sledované!</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li><strong>Motivace:</strong> change tracker si drží snapshot každé entity a porovnává změny – <strong>čas i paměť navíc</strong>, které u čtení nevyužijete</li>
+        <li>Bez sledování je dotaz <strong>citelně rychlejší</strong> a úspornější</li>
+        <li>Ale: změny takových entit <code class="inl">SaveChanges()</code> <strong>neuloží</strong></li>
+        <li>Duplicitní entita = nová instance → případně <code class="inl">AsNoTrackingWithIdentityResolution()</code></li>
+        <li>Projekce (<code class="inl">Select</code> bez celé entity) se nesledují nikdy</li>
+      </ul>
+      <div class="callout green" style="font-size:16px">Pravidlo: <b>čtu → AsNoTracking, edituji → tracking.</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 · KARTÉZSKÁ EXPLOZE ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Split query</span><h2>Problém: kartézská exploze</h2></header>
+  <div class="two w64">
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>dvě kolekce vedle sebe</span></div>
+<pre class="code small" data-lang="cs">var blogy = await db.Blogs
+    .Include(b =&gt; b.Posts)           // 10 postů
+    .Include(b =&gt; b.Contributors)    // 10 autorů
+    .ToListAsync();</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>vygenerované SQL (jeden dotaz)</span></div>
+<pre class="code small"><span class="k">SELECT</span> …
+<span class="k">FROM</span> Blogs b
+<span class="k">LEFT JOIN</span> Posts p        <span class="k">ON</span> b.Id = p.BlogId
+<span class="k">LEFT JOIN</span> Contributors c <span class="k">ON</span> b.Id = c.BlogId
+<span class="c">-- křížový součin: každý post × každý autor</span></pre></div>
+    </div>
+    <div class="stack">
+      <div class="card" style="text-align:center;border-color:rgba(251,113,133,.45)">
+        <p style="font-size:16px;color:var(--muted)">1 blog · 10 postů · 10 autorů</p>
+        <h4 style="font-size:34px;margin-top:6px" class="hl-r">10 × 10 = 100 řádků</h4>
+        <p style="font-size:15px;margin-top:6px">a sloupce blogu se opakují v každém z nich</p>
+      </div>
+      <ul class="list compact">
+        <li>JOIN dvou kolekcí <strong>na stejné úrovni</strong> vrací jejich křížový součin</li>
+        <li>Duplicity = zbytečná data po síti i v paměti</li>
+        <li>EF Core vás sám <strong>varuje</strong> (MultipleCollectionIncludeWarning), když načítáte víc kolekcí jedním dotazem</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 · SPLIT QUERY ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Split query</span><h2>Řešení: AsSplitQuery <span class="dim">– a jeho kompromisy</span></h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>rozdělení na více dotazů</span></div>
+<pre class="code small" data-lang="cs">// ✅ místo jednoho JOINu více dotazů
+var blogy = await db.Blogs
+    .Include(b =&gt; b.Posts)
+    .Include(b =&gt; b.Contributors)
+    .AsSplitQuery()
+    .ToListAsync();
+// → 3 SQL dotazy: Blogs, Posts, Contributors
+
+// globální výchozí chování…
+optionsBuilder.UseSqlServer(conn, o =&gt;
+    o.UseQuerySplittingBehavior(
+        QuerySplittingBehavior.SplitQuery));
+
+// …a výjimka zpět na jeden dotaz
+var mensi = await db.Blogs
+    .Include(b =&gt; b.Owner)
+    .AsSingleQuery()
+    .ToListAsync();</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li>Každá kolekce svým dotazem → <strong>žádná exploze ani duplicity</strong></li>
+        <li>Cena: <strong>více round-tripů</strong> do databáze (latence, hlavně v cloudu)</li>
+        <li><strong>Konzistence:</strong> mezi dotazy může někdo data změnit – řeší transakce / snapshot izolace</li>
+        <li>Reference (N:1) zůstávají JOINem i ve split režimu</li>
+        <li><strong>EF Core 10</strong> opravilo řazení a <code class="inl">Skip/Take</code> u split queries – dřív hrozily nekonzistentní výsledky</li>
+      </ul>
+      <div class="callout amber" style="font-size:15.5px">Doporučení: default nechte single, <b>AsSplitQuery zapínejte u dotazů s více kolekcemi</b> – EF vás na ně varováním upozorní sám.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · SHRNUTÍ ============ -->
+<section class="slide">
+  <header><span class="badge b-zaver">Závěr</span><h2>Kdy sáhnout po čem</h2></header>
+  <div class="content stack">
+    <div class="tblwrap">
+      <table class="tbl">
+        <tr><th style="width:52%">Situace</th><th>Nástroj</th></tr>
+        <tr><td style="white-space:normal;color:var(--text);font-weight:400">Potřebuji entitu <b>včetně souvisejících</b> dat</td><td><code class="inl">Include</code> / <code class="inl">ThenInclude</code></td></tr>
+        <tr><td style="white-space:normal;color:var(--text);font-weight:400">Z kolekce chci jen <b>část</b> (top 5, bez konceptů…)</td><td>filtrovaný <code class="inl">Include(… .Where().Take())</code></td></tr>
+        <tr><td style="white-space:normal;color:var(--text);font-weight:400">Data <b>jen čtu</b> – zobrazení, API, report</td><td><code class="inl">AsNoTracking()</code></td></tr>
+        <tr><td style="white-space:normal;color:var(--text);font-weight:400">Dotaz načítá <b>více kolekcí</b> najednou</td><td><code class="inl">AsSplitQuery()</code></td></tr>
+        <tr><td style="white-space:normal;color:var(--text);font-weight:400">Stačí mi <b>pár sloupců</b> / DTO</td><td><code class="inl">Select</code> – často nejlepší volba ze všech</td></tr>
+      </table>
+    </div>
+    <div class="callout">Zapněte si <b>logování SQL</b> (<code class="inl">LogTo</code>) a sledujte, co dotazy opravdu dělají – efekt všech tří metod uvidíte okamžitě. A kombinujte je: <code class="inl">Include + AsNoTracking + AsSplitQuery</code> v jednom dotazu je zcela běžné.</div>
+  </div>
+</section>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="brand"><span class="dot"></span>EF Core · efektivní načítání dat</div>
+  <div class="right">
+    <span class="hint">← → listování &nbsp;·&nbsp; F celá obrazovka</span>
+    <button class="navbtn" id="prev" aria-label="Předchozí slide">‹</button>
+    <button class="navbtn" id="next" aria-label="Další slide">›</button>
+    <span id="counter">1 / 8</span>
+  </div>
+</div>
+<div id="bar"></div>
+
+</div>
+</div>
+
+<style>
+#deck{transform:translate(-50%,-50%)}
+</style>
+
+<script>
+const KW = new Set(('using namespace class struct record interface enum public private protected internal static readonly required var new return void int string bool long double decimal float char object async await override virtual abstract sealed partial get set init if else foreach for while do switch case break continue default in out ref params is as null true false this base throw try catch finally where select from orderby group by let join on equals into when not and or with nameof typeof event delegate yield lock').split(' '));
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function hlCS(src){
+  const re = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|[$@]+"(?:[^"\\]|\\.)*"|"(?:[^"\\]|\\.)*"|\b\d[\d_]*(?:\.\d+)?[fFdDmMuUlL]?\b|[A-Za-z_][A-Za-z0-9_]*|[\s\S]/g;
+  const toks = src.match(re) || [];
+  let out = '';
+  for (let j = 0; j < toks.length; j++){
+    const tk = toks[j];
+    if (tk.startsWith('//') || tk.startsWith('/*')) { out += '<span class="c">'+esc(tk)+'</span>'; continue; }
+    if ((tk[0] === '"' || tk[0] === '$' || tk[0] === '@') && tk.includes('"')) { out += '<span class="s">'+esc(tk)+'</span>'; continue; }
+    if (/^\d/.test(tk)) { out += '<span class="n">'+esc(tk)+'</span>'; continue; }
+    if (/^[A-Za-z_]/.test(tk)){
+      if (KW.has(tk)) { out += '<span class="k">'+esc(tk)+'</span>'; continue; }
+      let p = j-1; while (p >= 0 && /^\s+$/.test(toks[p])) p--;
+      let n = j+1; while (n < toks.length && /^\s+$/.test(toks[n])) n++;
+      const prevCh = p >= 0 ? toks[p].slice(-1) : '';
+      const nextCh = n < toks.length ? toks[n][0] : '';
+      if (prevCh === '.') { out += (nextCh === '(' || nextCh === '<') ? '<span class="f">'+esc(tk)+'</span>' : esc(tk); continue; }
+      if (/[A-Z]/.test(tk[0])) { out += '<span class="t">'+esc(tk)+'</span>'; continue; }
+      out += esc(tk); continue;
+    }
+    out += esc(tk);
+  }
+  return out;
+}
+
+document.querySelectorAll('pre.code[data-lang="cs"]').forEach(pre => { pre.innerHTML = hlCS(pre.textContent); });
+
+const slides = [...document.querySelectorAll('.slide')];
+const counter = document.getElementById('counter');
+const bar = document.getElementById('bar');
+const deck = document.getElementById('deck');
+let cur = 0;
+slides[0].classList.add('active');
+
+function go(n){
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur && slides[cur].classList.contains('active')) { paint(); return; }
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  paint();
+}
+function paint(){
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  bar.style.width = ((cur+1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (cur+1));
+}
+function fit(){
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  deck.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+addEventListener('resize', fit); fit();
+
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') { e.preventDefault(); go(cur+1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); go(cur-1); }
+  else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(slides.length-1); }
+  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+});
+document.getElementById('prev').addEventListener('click', e => { go(cur-1); e.currentTarget.blur(); });
+document.getElementById('next').addEventListener('click', e => { go(cur+1); e.currentTarget.blur(); });
+
+let tx = null;
+addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive:true});
+addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+  tx = null;
+}, {passive:true});
+
+addEventListener('hashchange', () => {
+  const n = parseInt(location.hash.slice(1));
+  if (!isNaN(n) && n >= 1) go(n-1);
+});
+const h = parseInt(location.hash.slice(1));
+if (!isNaN(h) && h >= 1) go(h-1);
+paint();
+</script>
+</body>
+</html>

@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entity Framework Core 10 – Školení</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;
+  --panel:#131826;
+  --panel2:#0f1420;
+  --code-bg:#0e1320;
+  --border:rgba(148,163,184,.15);
+  --text:#e8edf6;
+  --muted:#939eb4;
+  --purple:#8b7cf8;
+  --cyan:#38bdf8;
+  --green:#4ade80;
+  --amber:#fbbf24;
+  --rose:#fb7185;
+  --blue:#7aa2ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0}
+#deck{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;background:var(--bg);border-radius:0;overflow:hidden}
+/* dekorativní pozadí */
+#deck::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(148,163,184,.055) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 90% 80% at 50% 45%,#000 30%,transparent 100%);pointer-events:none}
+.glow{position:absolute;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.glow.g1{width:520px;height:520px;right:-160px;top:-200px;background:rgba(139,124,248,.17)}
+.glow.g2{width:460px;height:460px;left:-170px;bottom:-210px;background:rgba(56,189,248,.11)}
+
+/* ====== slidy ====== */
+.slide{position:absolute;inset:0;padding:52px 74px 66px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .38s ease,transform .38s ease,visibility .38s;z-index:1}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide > header{margin-bottom:24px;flex:none}
+.slide h2{font-size:39px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-top:10px}
+.slide h2 .dim{color:var(--muted);font-weight:600}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+
+.badge{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:5px 13px;border-radius:999px;border:1px solid}
+.b-zaklady{color:#af9fff;background:rgba(139,124,248,.12);border-color:rgba(139,124,248,.4)}
+.b-pristupy{color:#67cdf8;background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.4)}
+.b-praxe{color:#6ee79c;background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.38)}
+.b-tipy{color:#fcd253;background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.38)}
+.b-pokrocile{color:#fc94a2;background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.4)}
+.b-zaver{color:#9db8ff;background:rgba(122,162,255,.10);border-color:rgba(122,162,255,.4)}
+
+/* layouty */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;min-height:0;align-content:start}
+.two.w64{grid-template-columns:1.55fr 1fr}
+.two.w46{grid-template-columns:1fr 1.55fr}
+.stack{display:flex;flex-direction:column;gap:16px;min-height:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+ul.list{list-style:none}
+ul.list li{position:relative;padding-left:26px;margin-bottom:13px;font-size:20px;line-height:1.42;color:var(--text)}
+ul.list li::before{content:'▸';position:absolute;left:2px;top:0;color:var(--purple);font-weight:700}
+ul.list li strong{font-weight:700;color:#fff}
+ul.list.compact li{font-size:18px;margin-bottom:10px}
+ul.list li .sub{display:block;font-size:16px;color:var(--muted);margin-top:2px;line-height:1.4}
+.mut{color:var(--muted)}
+.hl-p{color:#af9fff;font-weight:600}.hl-c{color:#67cdf8;font-weight:600}.hl-g{color:#6ee79c;font-weight:600}.hl-a{color:#fcd253;font-weight:600}.hl-r{color:#fc94a2;font-weight:600}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:17px 19px}
+.card h4{font-size:18px;font-weight:700;margin-bottom:6px}
+.card p{font-size:15.5px;color:var(--muted);line-height:1.42}
+.callout{border-left:3px solid var(--purple);background:rgba(139,124,248,.09);padding:13px 18px;border-radius:0 12px 12px 0;font-size:18.5px;line-height:1.45}
+.callout.cyan{border-color:var(--cyan);background:rgba(56,189,248,.08)}
+.callout.green{border-color:var(--green);background:rgba(74,222,128,.08)}
+.callout.amber{border-color:var(--amber);background:rgba(251,191,36,.08)}
+.callout.rose{border-color:var(--rose);background:rgba(251,113,133,.08)}
+.callout b{color:#fff}
+
+/* kód */
+.codebox{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.codehead{display:flex;align-items:center;gap:8px;padding:9px 15px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.codehead .dots{display:flex;gap:5px}
+.codehead .dots i{width:9px;height:9px;border-radius:50%;display:block}
+.codehead .dots i:nth-child(1){background:#f66} .codehead .dots i:nth-child(2){background:#fb5} .codehead .dots i:nth-child(3){background:#5c5}
+.codehead span{font:600 12.5px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.03em}
+pre.code{font:400 16.5px/1.55 'JetBrains Mono',Consolas,monospace;padding:13px 18px;overflow:hidden;tab-size:4;white-space:pre;color:#dce3f0}
+pre.code.small{font-size:15px;line-height:1.5}
+pre.code.big{font-size:18px;line-height:1.6}
+.code .k{color:#c79bff}
+.code .t{color:#5eead4}
+.code .s{color:#9ece6a}
+.code .c{color:#5f6b80;font-style:italic}
+.code .f{color:#82aaff}
+.code .n{color:#ff9e64}
+.code .flag{color:#5eead4}
+.code .cmd{color:#c79bff;font-weight:600}
+.code .err{color:#fc94a2}
+code.inl{font:600 .92em 'JetBrains Mono',monospace;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.25);color:#cdc4ff;padding:1px 7px;border-radius:7px;white-space:nowrap}
+
+/* tabulky */
+table.tbl{width:100%;border-collapse:collapse;font-size:18.5px}
+.tbl th{text-align:left;font-weight:700;color:#c9d3ea;background:rgba(139,124,248,.10);padding:11px 16px;border-bottom:1px solid var(--border)}
+.tbl th:first-child{border-radius:12px 0 0 0}.tbl th:last-child{border-radius:0 12px 0 0}
+.tbl td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
+.tbl td:first-child{color:var(--muted);font-weight:600;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .yes{color:var(--green);font-weight:700}
+.tbl .no{color:var(--rose);font-weight:700}
+.tblwrap{background:var(--panel2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{font-size:15.5px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:#cfd8ea;white-space:nowrap}
+.chip b{color:var(--cyan)}
+
+/* titulní slide */
+.s-title{justify-content:center;align-items:center;text-align:center;padding-bottom:90px}
+.s-title .pill{font:700 14px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#67cdf8;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.35);border-radius:999px;padding:8px 20px;margin-bottom:30px}
+.s-title h1{font-size:78px;font-weight:900;letter-spacing:-2.5px;line-height:1.04;background:linear-gradient(105deg,#fff 20%,#b9aaff 55%,#67cdf8 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.s-title .sub{font-size:25px;color:var(--muted);margin-top:24px;font-weight:500}
+.s-title .meta{margin-top:44px;font-size:16.5px;color:var(--muted);display:flex;gap:14px;align-items:center}
+.s-title .meta i{width:5px;height:5px;border-radius:50%;background:var(--purple);display:inline-block}
+
+/* agenda */
+.agenda{display:flex;flex-direction:column;gap:15px;flex:1;justify-content:center;max-width:960px}
+.agenda .it{display:flex;align-items:center;gap:22px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 24px}
+.agenda .num{font:800 25px 'JetBrains Mono',monospace;width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.agenda .it h3{font-size:22.5px;font-weight:700}
+.agenda .it p{font-size:16px;color:var(--muted);margin-top:2px}
+.n1{color:#af9fff;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.35)}
+.n2{color:#67cdf8;background:rgba(56,189,248,.11);border:1px solid rgba(56,189,248,.35)}
+.n3{color:#6ee79c;background:rgba(74,222,128,.11);border:1px solid rgba(74,222,128,.32)}
+.n4{color:#fcd253;background:rgba(251,191,36,.11);border:1px solid rgba(251,191,36,.32)}
+.n5{color:#fc94a2;background:rgba(251,113,133,.11);border:1px solid rgba(251,113,133,.35)}
+
+/* diagramy */
+.diag{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.diag svg{width:100%;height:100%;max-height:100%}
+svg text{font-family:'Inter',system-ui,sans-serif}
+svg .mono{font-family:'JetBrains Mono',monospace}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;bottom:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;color:var(--muted);z-index:5;user-select:none}
+#hud .brand{display:flex;gap:9px;align-items:center;font-weight:600;letter-spacing:.02em}
+#hud .brand .dot{width:7px;height:7px;border-radius:2px;background:linear-gradient(135deg,var(--purple),var(--cyan))}
+#hud .right{display:flex;align-items:center;gap:14px}
+#hud .hint{opacity:.6;font-size:12px}
+#counter{font:600 13px 'JetBrains Mono',monospace;min-width:58px;text-align:right}
+.navbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.navbtn:hover{color:#fff;border-color:var(--purple)}
+#bar{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));width:0;transition:width .35s ease;z-index:6;border-radius:0 3px 3px 0}
+
+/* tisk */
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{overflow:visible;background:var(--bg)}
+  #stage{position:static}
+  #deck{position:relative;left:0;top:0;transform:none!important;width:1280px;height:auto;overflow:visible}
+  .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;width:1280px;height:720px;page-break-after:always;break-after:page;overflow:hidden}
+  #hud,#bar,.navbtn{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="deck">
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<!-- ============ 1 · TITULNÍ ============ -->
+<section class="slide s-title">
+  <div class="pill">.NET 10 &nbsp;·&nbsp; EF CORE 10 &nbsp;·&nbsp; LTS</div>
+  <h1>Entity Framework<br>Core</h1>
+  <div class="sub">Moderní ORM pro .NET – od objektů k databázi a&nbsp;zpět</div>
+  <div class="meta"><span>Školení</span><i></i><span>C# / .NET 10</span><i></i><span>2026</span></div>
+</section>
+
+<!-- ============ 2 · AGENDA ============ -->
+<section class="slide">
+  <header><span class="badge b-zaver">Agenda</span><h2>Čím se dnes budeme zabývat</h2></header>
+  <div class="agenda">
+    <div class="it"><div class="num n1">1</div><div><h3>Co je ORM a jak funguje</h3><p>Objektový vs. relační svět, jak Entity Framework Core propojuje kód s&nbsp;databází</p></div></div>
+    <div class="it"><div class="num n2">2</div><div><h3>Code First vs. Database First</h3><p>Dva přístupy k&nbsp;modelu – migrace a&nbsp;scaffolding, kdy zvolit který</p></div></div>
+    <div class="it"><div class="num n3">3</div><div><h3>EF Core v praxi</h3><p>Konzole a&nbsp;WPF (ruční vytvoření) vs. ASP.NET Core (dependency injection)</p></div></div>
+    <div class="it"><div class="num n4">4</div><div><h3>Tipy &amp; triky</h3><p>Na co si dát pozor – životnost kontextu, N+1, výkon, migrace v&nbsp;produkci</p></div></div>
+    <div class="it"><div class="num n5">5</div><div><h3>Pokročilá témata a novinky v EF Core 10</h3><p>Krátký přehled toho, co stojí za prozkoumání</p></div></div>
+  </div>
+</section>
+
+<!-- ============ 3 · CO JE ORM ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Základy</span><h2>Co je ORM?</h2></header>
+  <div class="content stack">
+    <div class="callout"><b>ORM (Object-Relational Mapping)</b> – technika, která automaticky <b>mapuje objekty v&nbsp;kódu na tabulky relační databáze</b> a&nbsp;zpět. Místo psaní SQL pracujete s&nbsp;běžnými C#&nbsp;objekty.</div>
+    <div class="two" style="flex:none">
+      <div class="card">
+        <h4 class="hl-p">Objektový svět (C#)</h4>
+        <ul class="list compact" style="margin-top:8px">
+          <li>třídy, objekty a&nbsp;reference</li>
+          <li>kolekce (<code class="inl">List&lt;Post&gt;</code>), dědičnost</li>
+          <li>chování + data pohromadě</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="hl-c">Relační svět (databáze)</h4>
+        <ul class="list compact" style="margin-top:8px">
+          <li>tabulky, řádky a&nbsp;sloupce</li>
+          <li>primární a&nbsp;cizí klíče, JOINy</li>
+          <li>dotazování přes SQL</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout amber" style="font-size:17.5px">Tyto dva světy si vzájemně nerozumí – tzv. <b>object-relational impedance mismatch</b>. Bez ORM ho překlenujete ručně: <code class="inl">SqlConnection</code>, <code class="inl">SqlCommand</code>, <code class="inl">DataReader</code> a&nbsp;mapování řádek po řádku…</div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>s ORM stačí</span></div>
+<pre class="code" data-lang="cs">var nejlepsi = await db.Blogs.Where(b =&gt; b.Rating &gt;= 4).ToListAsync();</pre></div>
+  </div>
+</section>
+
+<!-- ============ 4 · ORM DIAGRAM ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Základy</span><h2>Jak ORM propojuje kód a databázi</h2></header>
+  <div class="content diag">
+  <svg viewBox="0 0 1132 500" role="img" aria-label="Diagram: EF Core mapuje C# objekty na databázové tabulky">
+    <defs>
+      <marker id="mCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
+      <marker id="mGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4ade80"/></marker>
+      <marker id="mPurple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b7cf8"/></marker>
+      <linearGradient id="efStroke" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#8b7cf8"/><stop offset="1" stop-color="#38bdf8"/>
+      </linearGradient>
+    </defs>
+
+    <!-- levá karta: C# aplikace -->
+    <rect x="2" y="78" width="298" height="352" rx="16" fill="#121726" stroke="rgba(148,163,184,.18)"/>
+    <text x="40" y="116" class="mono" font-size="20" font-weight="700" fill="#af9fff">{ }</text>
+    <text x="86" y="115" font-size="21" font-weight="800" fill="#ffffff">C# aplikace</text>
+    <text x="86" y="138" font-size="13.5" fill="#939eb4">objektový svět</text>
+    <rect x="26" y="158" width="250" height="148" rx="10" fill="#0e1320" stroke="rgba(148,163,184,.15)"/>
+    <text x="42" y="186" class="mono" font-size="14"><tspan fill="#c79bff">class</tspan><tspan fill="#5eead4"> Blog</tspan><tspan fill="#dce3f0"> {</tspan></text>
+    <text x="68" y="212" class="mono" font-size="14"><tspan fill="#c79bff">int</tspan><tspan fill="#dce3f0"> Id;</tspan></text>
+    <text x="68" y="238" class="mono" font-size="14"><tspan fill="#c79bff">string</tspan><tspan fill="#dce3f0"> Title;</tspan></text>
+    <text x="68" y="264" class="mono" font-size="14"><tspan fill="#c79bff">int</tspan><tspan fill="#dce3f0"> Rating;</tspan></text>
+    <text x="42" y="290" class="mono" font-size="14" fill="#dce3f0">}</text>
+    <rect x="26" y="326" width="118" height="34" rx="17" fill="rgba(139,124,248,.13)" stroke="rgba(139,124,248,.4)"/>
+    <text x="85" y="348" class="mono" font-size="12.5" fill="#cdc4ff" text-anchor="middle">blog1 : Blog</text>
+    <rect x="158" y="326" width="118" height="34" rx="17" fill="rgba(139,124,248,.13)" stroke="rgba(139,124,248,.4)"/>
+    <text x="217" y="348" class="mono" font-size="12.5" fill="#cdc4ff" text-anchor="middle">blog2 : Blog</text>
+
+    <!-- pravá karta: databáze -->
+    <rect x="832" y="78" width="298" height="352" rx="16" fill="#121726" stroke="rgba(148,163,184,.18)"/>
+    <path d="M858 103 a15 6 0 0 1 30 0 v20 a15 6 0 0 1 -30 0 z" fill="rgba(56,189,248,.14)" stroke="#38bdf8" stroke-width="1.4"/>
+    <ellipse cx="873" cy="103" rx="15" ry="6" fill="rgba(56,189,248,.25)" stroke="#38bdf8" stroke-width="1.4"/>
+    <text x="904" y="115" font-size="21" font-weight="800" fill="#ffffff">Databáze</text>
+    <text x="904" y="138" font-size="13.5" fill="#939eb4">relační svět (SQL)</text>
+    <text x="858" y="172" class="mono" font-size="12.5" fill="#939eb4">tabulka Blogs</text>
+    <rect x="856" y="182" width="250" height="90" rx="8" fill="#0e1320" stroke="rgba(148,163,184,.2)"/>
+    <rect x="856" y="182" width="250" height="30" rx="8" fill="rgba(56,189,248,.12)"/>
+    <rect x="856" y="197" width="250" height="15" fill="rgba(56,189,248,.12)"/>
+    <line x1="906" y1="182" x2="906" y2="272" stroke="rgba(148,163,184,.2)"/>
+    <line x1="1036" y1="182" x2="1036" y2="272" stroke="rgba(148,163,184,.2)"/>
+    <line x1="856" y1="212" x2="1106" y2="212" stroke="rgba(148,163,184,.2)"/>
+    <line x1="856" y1="242" x2="1106" y2="242" stroke="rgba(148,163,184,.2)"/>
+    <text x="868" y="202" class="mono" font-size="13" font-weight="600" fill="#9fd8f8">Id</text>
+    <text x="918" y="202" class="mono" font-size="13" font-weight="600" fill="#9fd8f8">Title</text>
+    <text x="1048" y="202" class="mono" font-size="13" font-weight="600" fill="#9fd8f8">Rating</text>
+    <text x="868" y="232" class="mono" font-size="13" fill="#dce3f0">1</text>
+    <text x="918" y="232" class="mono" font-size="13" fill="#dce3f0">Ada o EF</text>
+    <text x="1048" y="232" class="mono" font-size="13" fill="#dce3f0">5</text>
+    <text x="868" y="262" class="mono" font-size="13" fill="#dce3f0">2</text>
+    <text x="918" y="262" class="mono" font-size="13" fill="#dce3f0">.NET tipy</text>
+    <text x="1048" y="262" class="mono" font-size="13" fill="#dce3f0">4</text>
+    <rect x="856" y="292" width="250" height="36" rx="9" fill="none" stroke="rgba(148,163,184,.35)" stroke-dasharray="5 5"/>
+    <text x="981" y="315" class="mono" font-size="12.5" fill="#939eb4" text-anchor="middle">tabulka Posts (FK BlogId)</text>
+    <text x="981" y="366" font-size="13" fill="#939eb4" text-anchor="middle">1 řádek tabulky  =  1 objekt v paměti</text>
+
+    <!-- střed: EF Core -->
+    <rect x="436" y="130" width="260" height="250" rx="18" fill="rgba(139,124,248,.08)" stroke="url(#efStroke)" stroke-width="1.8"/>
+    <text x="566" y="170" font-size="26" font-weight="800" fill="#ffffff" text-anchor="middle">EF Core</text>
+    <text x="566" y="193" font-size="13.5" fill="#939eb4" text-anchor="middle">vrstva ORM</text>
+    <line x1="458" y1="208" x2="674" y2="208" stroke="rgba(148,163,184,.2)"/>
+    <text x="460" y="236" font-size="14.5" fill="#dce3f0">•  mapování tříd ⇄ tabulek</text>
+    <text x="460" y="266" font-size="14.5" fill="#dce3f0">•  překlad LINQ → SQL</text>
+    <text x="460" y="296" font-size="14.5" fill="#dce3f0">•  change tracking (sledování změn)</text>
+    <text x="460" y="326" font-size="14.5" fill="#dce3f0">•  materializace objektů</text>
+    <text x="460" y="356" font-size="14.5" fill="#dce3f0">•  migrace schématu</text>
+
+    <!-- šipky: dotaz -->
+    <text x="368" y="164" font-size="13" font-weight="600" fill="#7fd7f9" text-anchor="middle">LINQ dotaz</text>
+    <line x1="302" y1="180" x2="428" y2="180" stroke="#38bdf8" stroke-width="2" marker-end="url(#mCyan)"/>
+    <text x="764" y="164" font-size="13" font-weight="600" fill="#7fd7f9" text-anchor="middle">SQL · SELECT …</text>
+    <line x1="704" y1="180" x2="824" y2="180" stroke="#38bdf8" stroke-width="2" marker-end="url(#mCyan)"/>
+
+    <!-- šipky: zápis -->
+    <text x="368" y="239" class="mono" font-size="12.5" font-weight="600" fill="#86efac" text-anchor="middle">SaveChanges()</text>
+    <line x1="302" y1="255" x2="428" y2="255" stroke="#4ade80" stroke-width="2" marker-end="url(#mGreen)"/>
+    <text x="764" y="239" font-size="11" font-weight="600" fill="#86efac" text-anchor="middle" letter-spacing=".2">INSERT · UPDATE · DELETE</text>
+    <line x1="704" y1="255" x2="824" y2="255" stroke="#4ade80" stroke-width="2" marker-end="url(#mGreen)"/>
+
+    <!-- šipky: výsledky zpět -->
+    <text x="764" y="314" font-size="13" font-weight="600" fill="#b6aaff" text-anchor="middle">řádky výsledku</text>
+    <line x1="824" y1="330" x2="704" y2="330" stroke="#8b7cf8" stroke-width="2" marker-end="url(#mPurple)"/>
+    <text x="368" y="314" font-size="13" font-weight="600" fill="#b6aaff" text-anchor="middle">hotové C# objekty</text>
+    <text x="368" y="352" font-size="11.5" fill="#939eb4" text-anchor="middle">(materializace)</text>
+    <line x1="428" y1="330" x2="308" y2="330" stroke="#8b7cf8" stroke-width="2" marker-end="url(#mPurple)"/>
+
+    <text x="566" y="478" font-size="16" fill="#aab4c8" text-anchor="middle">Vy píšete C# a LINQ – SQL, mapování a sledování změn řeší EF Core.</text>
+  </svg>
+  </div>
+</section>
+
+<!-- ============ 5 · CO JE EF CORE ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Základy</span><h2>Entity Framework Core <span class="dim">– ORM pro .NET</span></h2></header>
+  <div class="two w64">
+    <div>
+      <ul class="list">
+        <li><strong>Oficiální ORM od Microsoftu</strong> – open-source (MIT), multiplatformní (Windows, Linux, macOS)</li>
+        <li>Kompletně přepsaný nástupce „klasického“ Entity Frameworku 6</li>
+        <li><strong>EF Core 10</strong> vyšel s .NET 10 (listopad 2025) – <strong>LTS</strong>, podpora do listopadu 2028<span class="sub">vyžaduje .NET 10 (nejde použít na starším runtime)</span></li>
+        <li>Funguje všude: konzole, WPF / WinForms, ASP.NET Core, worker services, MAUI…</li>
+        <li>Jeden kód, různé databáze – díky <strong>poskytovatelům (providers)</strong></li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>instalace balíčků</span></div>
+<pre class="code small" data-lang="cli">dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Design</pre></div>
+      <div class="card">
+        <h4>Podporované databáze</h4>
+        <div class="chips" style="margin-top:10px">
+          <span class="chip">SQL Server / Azure SQL</span>
+          <span class="chip">SQLite</span>
+          <span class="chip">PostgreSQL</span>
+          <span class="chip">MySQL / MariaDB</span>
+          <span class="chip">Oracle</span>
+          <span class="chip">Azure Cosmos DB</span>
+          <span class="chip">InMemory <b>(testy)</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 · STAVEBNÍ KAMENY ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Základy</span><h2>Základní stavební kameny</h2></header>
+  <div class="two w46">
+    <div>
+      <ul class="list compact" style="margin-top:4px">
+        <li><strong>Entita</strong> – obyčejná C# třída (POCO)<span class="sub">jedna instance = jeden řádek v tabulce</span></li>
+        <li><strong>DbContext</strong> – brána do databáze<span class="sub">spojení, konfigurace, change tracking; představuje jednu „jednotku práce“ (unit of work)</span></li>
+        <li><strong>DbSet&lt;T&gt;</strong> – kolekce entit ≈ tabulka<span class="sub">vstupní bod pro LINQ dotazy</span></li>
+        <li><strong>Change tracker</strong> – hlídá změny načtených objektů</li>
+        <li><strong>SaveChanges()</strong> – promítne všechny změny do databáze v jedné transakci</li>
+      </ul>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>Model.cs</span></div>
+<pre class="code" data-lang="cs">public class Blog
+{
+    public int Id { get; set; }      // PK dle konvence
+    public required string Title { get; set; }
+    public int Rating { get; set; }
+    public List&lt;Post&gt; Posts { get; } = [];  // vztah 1:N
+}
+
+public class BlogContext : DbContext
+{
+    public DbSet&lt;Blog&gt; Blogs =&gt; Set&lt;Blog&gt;();
+    public DbSet&lt;Post&gt; Posts =&gt; Set&lt;Post&gt;();
+}</pre></div>
+  </div>
+</section>
+
+<!-- ============ 7 · UNIT OF WORK V PRAXI ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Základy</span><h2>Jak vypadá práce s EF Core</h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>Program.cs</span></div>
+<pre class="code" data-lang="cs">using var db = new BlogContext();
+
+// 1) DOTAZ – LINQ se přeloží na SQL
+var top = await db.Blogs
+    .Where(b =&gt; b.Rating &gt;= 4)           // WHERE Rating &gt;= 4
+    .OrderByDescending(b =&gt; b.Rating)    // ORDER BY Rating DESC
+    .Take(10)                            // TOP(10)
+    .ToListAsync();
+
+// 2) VLOŽENÍ nového záznamu
+db.Blogs.Add(new Blog { Title = "Novinky v .NET 10" });
+
+// 3) ÚPRAVA – change tracker si změny hlídá sám
+top[0].Rating = 5;
+
+// 4) ULOŽENÍ – INSERT + UPDATE v jedné transakci
+await db.SaveChangesAsync();</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li>Dotaz se <strong>vykoná až</strong> u <code class="inl">ToListAsync()</code>, <code class="inl">First()</code>, <code class="inl">Count()</code>…<span class="sub">do té doby jen skládáte výraz (deferred execution)</span></li>
+        <li>Výsledné řádky se <strong>materializují</strong> na objekty <code class="inl">Blog</code></li>
+        <li>Načtené entity jsou <strong>sledované</strong> – stačí změnit vlastnost</li>
+        <li><code class="inl">SaveChanges()</code> pošle všechny změny najednou</li>
+      </ul>
+      <div class="callout green" style="font-size:16.5px">Žádné ruční SQL, žádné mapování – <b>jedna jednotka práce</b>: otevřít context → pracovat → uložit → zavřít.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · DVA PŘÍSTUPY (DIAGRAM) ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Přístupy</span><h2>Dva směry: Code First vs. Database First</h2></header>
+  <div class="content diag">
+  <svg viewBox="0 0 1132 470" role="img" aria-label="Diagram Code First a Database First">
+    <defs>
+      <marker id="mP2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b7cf8"/></marker>
+      <marker id="mC2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
+    </defs>
+
+    <!-- CODE FIRST -->
+    <rect x="2" y="16" width="168" height="34" rx="17" fill="rgba(139,124,248,.15)" stroke="rgba(139,124,248,.45)"/>
+    <text x="86" y="38" font-size="14" font-weight="800" fill="#af9fff" text-anchor="middle" letter-spacing="1.5">CODE FIRST</text>
+    <text x="192" y="38" font-size="15" fill="#939eb4">kód je zdroj pravdy – databáze se generuje z modelu</text>
+
+    <rect x="2" y="72" width="372" height="112" rx="14" fill="#121726" stroke="rgba(139,124,248,.4)"/>
+    <text x="28" y="122" class="mono" font-size="21" font-weight="700" fill="#af9fff">{ }</text>
+    <text x="76" y="119" font-size="20" font-weight="800" fill="#ffffff">C# model</text>
+    <text x="76" y="146" font-size="14.5" fill="#939eb4">entity + DbContext – píšete ručně</text>
+
+    <rect x="758" y="72" width="372" height="112" rx="14" fill="#121726" stroke="rgba(148,163,184,.25)"/>
+    <path d="M782 104 v22 a15 6 0 0 0 30 0 v-22" fill="rgba(56,189,248,.14)" stroke="#38bdf8" stroke-width="1.4"/>
+    <ellipse cx="797" cy="104" rx="15" ry="6" fill="rgba(56,189,248,.25)" stroke="#38bdf8" stroke-width="1.4"/>
+    <text x="830" y="119" font-size="20" font-weight="800" fill="#ffffff">Databázové schéma</text>
+    <text x="830" y="146" font-size="14.5" fill="#939eb4">tabulky vzniknou migracemi</text>
+
+    <text x="566" y="106" font-size="13" font-weight="800" fill="#af9fff" text-anchor="middle" letter-spacing="2.5">MIGRACE</text>
+    <line x1="386" y1="128" x2="744" y2="128" stroke="#8b7cf8" stroke-width="2.5" marker-end="url(#mP2)"/>
+    <text x="566" y="156" class="mono" font-size="12.5" fill="#a8b2c7" text-anchor="middle">dotnet ef migrations add</text>
+    <text x="566" y="176" class="mono" font-size="12.5" fill="#a8b2c7" text-anchor="middle">dotnet ef database update</text>
+
+    <!-- DATABASE FIRST -->
+    <rect x="2" y="246" width="214" height="34" rx="17" fill="rgba(56,189,248,.12)" stroke="rgba(56,189,248,.45)"/>
+    <text x="109" y="268" font-size="14" font-weight="800" fill="#67cdf8" text-anchor="middle" letter-spacing="1.5">DATABASE FIRST</text>
+    <text x="238" y="268" font-size="15" fill="#939eb4">databáze už existuje – kód se generuje z ní</text>
+
+    <rect x="2" y="302" width="372" height="112" rx="14" fill="#121726" stroke="rgba(56,189,248,.4)"/>
+    <path d="M26 334 v22 a15 6 0 0 0 30 0 v-22" fill="rgba(56,189,248,.14)" stroke="#38bdf8" stroke-width="1.4"/>
+    <ellipse cx="41" cy="334" rx="15" ry="6" fill="rgba(56,189,248,.25)" stroke="#38bdf8" stroke-width="1.4"/>
+    <text x="76" y="349" font-size="20" font-weight="800" fill="#ffffff">Existující databáze</text>
+    <text x="76" y="376" font-size="14.5" fill="#939eb4">např. legacy systém spravovaný DBA</text>
+
+    <rect x="758" y="302" width="372" height="112" rx="14" fill="#121726" stroke="rgba(148,163,184,.25)"/>
+    <text x="784" y="352" class="mono" font-size="21" font-weight="700" fill="#67cdf8">{ }</text>
+    <text x="832" y="349" font-size="20" font-weight="800" fill="#ffffff">Vygenerovaný C# model</text>
+    <text x="832" y="376" font-size="14.5" fill="#939eb4">entity + DbContext – vytvoří nástroj</text>
+
+    <text x="566" y="318" font-size="13" font-weight="800" fill="#67cdf8" text-anchor="middle" letter-spacing="2.5">SCAFFOLDING</text>
+    <text x="566" y="338" font-size="11.5" fill="#7fa4b8" text-anchor="middle">(reverse engineering)</text>
+    <line x1="386" y1="358" x2="744" y2="358" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#mC2)"/>
+    <text x="566" y="386" class="mono" font-size="12.5" fill="#a8b2c7" text-anchor="middle">dotnet ef dbcontext scaffold "…"</text>
+    <text x="566" y="406" class="mono" font-size="12.5" fill="#a8b2c7" text-anchor="middle">Microsoft.EntityFrameworkCore.SqlServer</text>
+
+    <text x="566" y="452" font-size="16" fill="#aab4c8" text-anchor="middle">Oba přístupy končí stejně: máte model + DbContext a dál pracujete přes LINQ.</text>
+  </svg>
+  </div>
+</section>
+
+<!-- ============ 9 · CODE FIRST ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Přístupy</span><h2>Code First <span class="dim">– model píšete v C#</span></h2></header>
+  <div class="two w46">
+    <div class="stack">
+      <ul class="list compact">
+        <li><strong>Kód je zdroj pravdy</strong> – databáze vzniká z entit a konfigurace</li>
+        <li>Model popisují <strong>konvence</strong> (<code class="inl">Id</code> = primární klíč), <strong>datové anotace</strong> a <strong>Fluent API</strong> v <code class="inl">OnModelCreating</code></li>
+        <li>Schéma se <strong>verzuje v Gitu</strong> spolu s kódem – změny DB projdou code review</li>
+        <li>Ideální pro <strong>nové projekty</strong> (greenfield)</li>
+      </ul>
+      <div class="callout" style="font-size:16.5px">Pořadí síly: <b>Fluent API</b> přebíjí <b>anotace</b>, anotace přebíjí <b>konvence</b>.</div>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>Blog.cs + BlogContext.cs</span></div>
+<pre class="code small" data-lang="cs">public class Blog
+{
+    public int Id { get; set; }            // PK podle konvence
+    [MaxLength(200)]                       // datová anotace
+    public required string Title { get; set; }
+    public List&lt;Post&gt; Posts { get; } = [];
+}
+
+public class BlogContext : DbContext
+{
+    public DbSet&lt;Blog&gt; Blogs =&gt; Set&lt;Blog&gt;();
+
+    protected override void OnModelCreating(ModelBuilder mb)
+    {
+        mb.Entity&lt;Blog&gt;()                  // Fluent API
+          .HasIndex(b =&gt; b.Title).IsUnique();
+    }
+}</pre></div>
+  </div>
+</section>
+
+<!-- ============ 10 · MIGRACE ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Přístupy</span><h2>Code First <span class="dim">– migrace databáze</span></h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>terminál</span></div>
+<pre class="code" data-lang="cli"># jednorázově: CLI nástroj + balíček Design
+dotnet tool install --global dotnet-ef
+dotnet add package Microsoft.EntityFrameworkCore.Design
+
+# 1) první migrace z aktuálního modelu
+dotnet ef migrations add InitialCreate
+
+# 2) aplikace migrací do databáze
+dotnet ef database update
+
+# … změním model … a znovu:
+dotnet ef migrations add PridanoHodnoceni
+dotnet ef database update
+
+# SQL skript pro nasazení (produkce)
+dotnet ef migrations script --idempotent -o deploy.sql</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li>Migrace = <strong>C# třída</strong> s metodami <code class="inl">Up()</code> a <code class="inl">Down()</code></li>
+        <li>EF si drží <strong>snapshot modelu</strong> – pozná, co se od minula změnilo</li>
+        <li>Aplikované migrace eviduje tabulka <code class="inl">__EFMigrationsHistory</code><span class="sub"><code class="inl">database update</code> doplní jen ty chybějící</span></li>
+        <li>Migrace <strong>patří do Gitu</strong> – historie schématu jako součást kódu</li>
+      </ul>
+      <div class="callout cyan" style="font-size:16px">Každá změna modelu → <b>nová migrace</b>. Migrace se skládají za sebe jako commity.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11 · DATABASE FIRST ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Přístupy</span><h2>Database First <span class="dim">– scaffolding existující DB</span></h2></header>
+  <div class="content stack">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>terminál (PowerShell – ` je pokračování řádku)</span></div>
+<pre class="code small" data-lang="cli">dotnet ef dbcontext scaffold `
+    "Server=.;Database=Chinook;Trusted_Connection=True;TrustServerCertificate=True" `
+    Microsoft.EntityFrameworkCore.SqlServer `
+    --output-dir Models --context-dir Data --context ChinookContext `
+    --table Album --table Artist</pre></div>
+    <div class="two" style="flex:none">
+      <div class="card">
+        <h4 class="hl-c">Co se vygeneruje</h4>
+        <ul class="list compact" style="margin-top:8px">
+          <li>entitní třídy podle tabulek (vč. <code class="inl">?</code> pro NULL sloupce)</li>
+          <li><code class="inl">DbContext</code> s Fluent API konfigurací<span class="sub">volitelně <code class="inl">--data-annotations</code> pro atributy</span></li>
+          <li>vztahy podle cizích klíčů, vč. many-to-many</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 class="hl-a">Na co si dát pozor</h4>
+        <ul class="list compact" style="margin-top:8px">
+          <li>nový scaffold s <code class="inl">--force</code> <strong>přepíše soubory</strong><span class="sub">vlastní kód proto jen do <b>partial tříd</b> vedle</span></li>
+          <li>nescaffolduje se dědičnost ani owned types</li>
+          <li>connection string přesuňte z kódu do konfigurace</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 · KTERÝ ZVOLIT ============ -->
+<section class="slide">
+  <header><span class="badge b-pristupy">Přístupy</span><h2>Který přístup zvolit?</h2></header>
+  <div class="content stack">
+    <div class="tblwrap">
+      <table class="tbl">
+        <tr><th style="width:26%"></th><th>Code First</th><th>Database First</th></tr>
+        <tr><td>Zdroj pravdy</td><td>C# model</td><td>databázové schéma</td></tr>
+        <tr><td>Nový projekt</td><td><span class="yes">✓</span> ideální volba</td><td>nedává smysl</td></tr>
+        <tr><td>Existující databáze</td><td>možné – scaffold jednou, pak migrace</td><td><span class="yes">✓</span> přirozená volba</td></tr>
+        <tr><td>Změny schématu</td><td>migrace generované z kódu</td><td>ALTER v DB → znovu scaffold</td></tr>
+        <tr><td>Verzování &amp; review</td><td><span class="yes">✓</span> v Gitu spolu s kódem</td><td>mimo kód (SQL skripty, DBA)</td></tr>
+        <tr><td>Schéma vlastní DBA tým</td><td>hůře se prosazuje</td><td><span class="yes">✓</span> vyhovuje procesům</td></tr>
+      </table>
+    </div>
+    <div class="callout green">Časté v praxi: u existující databáze <b>scaffoldovat jen jednou</b> jako výchozí bod – a dál pokračovat stylem <b>code first s migracemi</b>.</div>
+  </div>
+</section>
+
+<!-- ============ 13 · KONZOLE ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">EF Core v praxi</span><h2>Konzole <span class="dim">– context si vytváříte ručně</span></h2></header>
+  <div class="two">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>AppDbContext.cs – varianta A: OnConfiguring</span></div>
+<pre class="code" data-lang="cs">public class AppDbContext : DbContext
+{
+    public DbSet&lt;Blog&gt; Blogs =&gt; Set&lt;Blog&gt;();
+
+    protected override void OnConfiguring(
+        DbContextOptionsBuilder options)
+        =&gt; options.UseSqlServer(
+            "Server=.;Database=Blogy;…");
+            // ⚠ radši číst z konfigurace
+}
+
+// Program.cs – vytvoření i úklid je na vás
+using var db = new AppDbContext();
+var blogy = await db.Blogs.ToListAsync();</pre></div>
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>varianta B: options zvenku</span></div>
+<pre class="code" data-lang="cs">var options =
+    new DbContextOptionsBuilder&lt;AppDbContext&gt;()
+        .UseSqlServer(connString)
+        .Options;
+
+using var db = new AppDbContext(options);</pre></div>
+      <ul class="list compact">
+        <li><strong>Vy vytváříte, vy uklízíte</strong> – vždy <code class="inl">using</code>, ať se context korektně disposne</li>
+        <li>Varianta B je <strong>testovatelnější</strong> – konfigurace přichází zvenku (např. SQLite pro testy)</li>
+        <li>Stejný princip pro skripty, workery i desktop bez DI</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 14 · WPF ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">EF Core v praxi</span><h2>WPF a desktop <span class="dim">– na co myslet</span></h2></header>
+  <div class="two w46">
+    <div class="stack">
+      <ul class="list compact">
+        <li>I v desktopu platí: <strong>context = krátká jednotka práce</strong><span class="sub">ne jeden globální context po celou dobu běhu aplikace</span></li>
+        <li>Typicky <strong>nový context na operaci</strong> – načtení seznamu, uložení formuláře…</li>
+        <li>Context <strong>není thread-safe</strong> – pozor na práci na pozadí a UI vlákno</li>
+        <li>S Generic Hostem ve WPF: <code class="inl">AddDbContextFactory</code> a <code class="inl">IDbContextFactory&lt;T&gt;</code><span class="sub">továrna vyrábí čerstvé contexty; Dispose je pak na vás</span></li>
+      </ul>
+      <div class="callout amber" style="font-size:16px">Dlouhožijící context v desktopu = rostoucí paměť (change tracker drží všechna načtená data) a zastaralé údaje.</div>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>App.xaml.cs + ViewModel</span></div>
+<pre class="code" data-lang="cs">// registrace v Generic Hostu (App.xaml.cs)
+services.AddDbContextFactory&lt;AppDbContext&gt;(o =&gt;
+    o.UseSqlServer(
+        config.GetConnectionString("Default")));
+
+// ViewModel – na každou operaci čerstvý context
+public class BlogsViewModel(
+    IDbContextFactory&lt;AppDbContext&gt; factory)
+{
+    public async Task LoadAsync()
+    {
+        using var db = factory.CreateDbContext();
+        Blogs = await db.Blogs
+            .AsNoTracking()
+            .ToListAsync();
+    }
+}</pre></div>
+  </div>
+</section>
+
+<!-- ============ 15 · ASP.NET CORE ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">EF Core v praxi</span><h2>ASP.NET Core <span class="dim">– dependency injection</span></h2></header>
+  <div class="two">
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>Program.cs</span></div>
+<pre class="code" data-lang="cs">builder.Services.AddDbContext&lt;AppDbContext&gt;(options =&gt;
+    options.UseSqlServer(
+        builder.Configuration
+            .GetConnectionString("Default")));</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>appsettings.json</span></div>
+<pre class="code" data-lang="json">{
+  "ConnectionStrings": {
+    "Default": "Server=.;Database=Blogy;…"
+  }
+}</pre></div>
+      <div class="callout green" style="font-size:16px">Context <b>nevytváříte ani nedisposujete</b> – obojí řeší DI kontejner.</div>
+    </div>
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>AppDbContext.cs – konstruktor pro DI</span></div>
+<pre class="code" data-lang="cs">public class AppDbContext(
+    DbContextOptions&lt;AppDbContext&gt; options)
+    : DbContext(options)
+{
+    public DbSet&lt;Blog&gt; Blogs =&gt; Set&lt;Blog&gt;();
+}</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>injektáž – minimal API / controller</span></div>
+<pre class="code" data-lang="cs">app.MapGet("/blogs", async (AppDbContext db) =&gt;
+    await db.Blogs.AsNoTracking().ToListAsync());
+
+// nebo klasicky přes konstruktor controlleru
+public BlogsController(AppDbContext db) { … }</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 16 · SCOPED LIFETIME ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">EF Core v praxi</span><h2>Jak DI řídí životnost <span class="dim">– scoped</span></h2></header>
+  <div class="content">
+    <div class="diag" style="flex:none;height:238px">
+    <svg viewBox="0 0 1132 238" role="img" aria-label="Životní cyklus DbContextu v ASP.NET Core">
+      <defs>
+        <marker id="mG3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+      </defs>
+      <g>
+        <rect x="2" y="34" width="192" height="92" rx="13" fill="#121726" stroke="rgba(148,163,184,.28)"/>
+        <text x="98" y="72" font-size="16.5" font-weight="700" fill="#fff" text-anchor="middle">HTTP request</text>
+        <text x="98" y="98" font-size="13" fill="#939eb4" text-anchor="middle">přijde na server</text>
+      </g>
+      <line x1="200" y1="80" x2="228" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#mG3)"/>
+      <g>
+        <rect x="236" y="34" width="192" height="92" rx="13" fill="#121726" stroke="rgba(148,163,184,.28)"/>
+        <text x="332" y="72" font-size="16.5" font-weight="700" fill="#fff" text-anchor="middle">DI scope</text>
+        <text x="332" y="98" font-size="13" fill="#939eb4" text-anchor="middle">otevře se pro request</text>
+      </g>
+      <line x1="434" y1="80" x2="462" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#mG3)"/>
+      <g>
+        <rect x="470" y="34" width="192" height="92" rx="13" fill="rgba(74,222,128,.09)" stroke="rgba(74,222,128,.5)"/>
+        <text x="566" y="72" font-size="16.5" font-weight="700" fill="#6ee79c" text-anchor="middle">DbContext</text>
+        <text x="566" y="98" font-size="13" fill="#939eb4" text-anchor="middle">vytvořen (scoped)</text>
+      </g>
+      <line x1="668" y1="80" x2="696" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#mG3)"/>
+      <g>
+        <rect x="704" y="34" width="192" height="92" rx="13" fill="#121726" stroke="rgba(148,163,184,.28)"/>
+        <text x="800" y="72" font-size="16.5" font-weight="700" fill="#fff" text-anchor="middle">Controller / služba</text>
+        <text x="800" y="98" font-size="13" fill="#939eb4" text-anchor="middle">dostane ho injektovaný</text>
+      </g>
+      <line x1="902" y1="80" x2="930" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#mG3)"/>
+      <g>
+        <rect x="938" y="34" width="192" height="92" rx="13" fill="#121726" stroke="rgba(148,163,184,.28)"/>
+        <text x="1034" y="72" font-size="16.5" font-weight="700" fill="#fff" text-anchor="middle">Response</text>
+        <text x="1034" y="98" font-size="13" fill="#939eb4" text-anchor="middle">scope končí → Dispose</text>
+      </g>
+      <path d="M470 158 v14 h660 v-14" fill="none" stroke="rgba(74,222,128,.55)" stroke-width="1.6"/>
+      <text x="800" y="204" font-size="14.5" font-weight="600" fill="#6ee79c" text-anchor="middle">životnost DbContextu = přesně jeden request</text>
+    </svg>
+    </div>
+    <div class="two" style="flex:1;margin-top:6px">
+      <ul class="list compact">
+        <li><code class="inl">AddDbContext</code> registruje context jako <strong>scoped</strong> – 1&nbsp;request = 1&nbsp;instance</li>
+        <li>Žádné <code class="inl">using</code> – <strong>Dispose proběhne automaticky</strong> s koncem scope</li>
+      </ul>
+      <ul class="list compact">
+        <li><code class="inl">AddDbContextPool</code> – recyklace instancí, méně alokací při zátěži</li>
+        <li>Pozor: context <strong>nikdy neschovávat do singletonu</strong>; Blazor Server → <code class="inl">IDbContextFactory</code> (scope tam žije celý okruh)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 17 · SROVNÁNÍ ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">EF Core v praxi</span><h2>Ručně vs. dependency injection</h2></header>
+  <div class="content stack">
+    <div class="tblwrap">
+      <table class="tbl">
+        <tr><th style="width:24%"></th><th>Konzole / WPF (ručně)</th><th>ASP.NET Core (DI)</th></tr>
+        <tr><td>Vytvoření contextu</td><td><code class="inl">new AppDbContext()</code> / factory</td><td>DI kontejner (<code class="inl">AddDbContext</code>)</td></tr>
+        <tr><td>Konfigurace</td><td><code class="inl">OnConfiguring</code> nebo options zvenku</td><td>lambda v <code class="inl">AddDbContext</code> + appsettings</td></tr>
+        <tr><td>Životnost</td><td>řídíte sami (<code class="inl">using</code>)</td><td>scoped – jeden request, automaticky</td></tr>
+        <tr><td>Úklid (Dispose)</td><td>ručně</td><td>automaticky s koncem scope</td></tr>
+        <tr><td>Typické použití</td><td>skripty, nástroje, desktop</td><td>web API, MVC, Razor Pages, Blazor</td></tr>
+      </table>
+    </div>
+    <div class="callout">Společné pravidlo pro oba světy: <b>context má žít krátce</b> – jedna jednotka práce, pak pryč. Liší se jen to, <b>kdo</b> se o životní cyklus stará.</div>
+  </div>
+</section>
+
+<!-- ============ 18 · TIPY: ŽIVOTNOST & VLÁKNA ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Tipy &amp; triky</span><h2>Pozor na životnost a vlákna</h2></header>
+  <div class="two w46">
+    <div class="stack">
+      <ul class="list compact">
+        <li>Context je <strong>levný na vytvoření</strong> – vytvářejte klidně často, ale <strong>nedržte dlouho</strong></li>
+        <li><strong>Není thread-safe</strong> – jedna instance = jedna operace v daný okamžik</li>
+        <li>Vždy <code class="inl">await</code> – žádný „fire-and-forget“ <code class="inl">SaveChangesAsync()</code></li>
+        <li>Paralelní práce → <strong>více contextů</strong> (factory / samostatné scopy)</li>
+      </ul>
+      <div class="codebox" style="border-color:rgba(251,113,133,.4)"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>tuhle chybu uvidíte…</span></div>
+<pre class="code small"><span class="err">InvalidOperationException: A second operation was
+started on this context instance before a previous
+operation completed…</span></pre></div>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>typický scénář</span></div>
+<pre class="code" data-lang="cs">// ❌ dvě operace zároveň na jednom contextu
+var t1 = db.Blogs.ToListAsync();
+var t2 = db.Posts.ToListAsync();
+await Task.WhenAll(t1, t2);        // 💥 výjimka
+
+// ✅ postupně na jednom contextu…
+var blogs = await db.Blogs.ToListAsync();
+var posts = await db.Posts.ToListAsync();
+
+// ✅ …nebo opravdu paralelně, ale každý
+//    dotaz s vlastním contextem z factory
+using var dbA = factory.CreateDbContext();
+using var dbB = factory.CreateDbContext();</pre></div>
+  </div>
+</section>
+
+<!-- ============ 19 · TIPY: N+1 ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Tipy &amp; triky</span><h2>N+1 problém <span class="dim">– nejčastější zabiják výkonu</span></h2></header>
+  <div class="two">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>od nejhoršího k nejlepšímu</span></div>
+<pre class="code" data-lang="cs">// ❌ N+1: 1 dotaz na blogy + 1 pro KAŽDÝ blog
+foreach (var blog in await db.Blogs.ToListAsync())
+    Console.WriteLine(blog.Posts.Count);
+    // lazy loading → další SELECT v každé iteraci
+
+// ✅ eager loading – souvislosti jedním dotazem
+var blogs = await db.Blogs
+    .Include(b =&gt; b.Posts)
+    .ToListAsync();
+
+// ✅✅ projekce – jen data, která potřebujete
+var prehled = await db.Blogs
+    .Select(b =&gt; new { b.Title,
+                       Pocet = b.Posts.Count })
+    .ToListAsync();</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li><strong>Lazy loading je pohodlný, ale zákeřný</strong> – smyčka nad entitami = smršť dotazů</li>
+        <li><code class="inl">Include()</code> načte související data jedním dotazem (JOIN); jde i filtrovat</li>
+        <li><strong>Projekce přes <code class="inl">Select</code></strong> bývá nejrychlejší – méně sloupců, žádné sledování</li>
+        <li><code class="inl">AsNoTracking()</code> pro čtení – citelně rychlejší a úspornější</li>
+      </ul>
+      <div class="callout amber" style="font-size:16px">Zapněte si ve vývoji <b>logování SQL</b> (<code class="inl">LogTo</code>) – uvidíte černé na bílém, kolik dotazů EF opravdu posílá.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 20 · TIPY: VÝKON ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Tipy &amp; triky</span><h2>Výkonové desatero <span class="dim">(zkrácené)</span></h2></header>
+  <div class="content stack">
+    <div class="grid3">
+      <div class="card"><h4 class="hl-g">AsNoTracking()</h4><p>Čtení bez change trackeru – rychlejší a méně paměti. Default pro read-only dotazy.</p></div>
+      <div class="card"><h4 class="hl-g">Projekce (Select)</h4><p>Tahejte jen potřebné sloupce, ne celé entity se vším všudy.</p></div>
+      <div class="card"><h4 class="hl-g">Stránkování</h4><p><code class="inl">Skip / Take</code> vždy s <code class="inl">OrderBy</code>; velká data → keyset pagination.</p></div>
+      <div class="card"><h4 class="hl-g">AsSplitQuery()</h4><p>Více <code class="inl">Include</code> = kartézská exploze řádků. Split query ji rozdělí na víc dotazů.</p></div>
+      <div class="card"><h4 class="hl-g">ExecuteUpdate / Delete</h4><p>Hromadné změny jedním SQL příkazem – bez načítání entit do paměti.</p></div>
+      <div class="card"><h4 class="hl-g">Async všude</h4><p><code class="inl">ToListAsync</code>, <code class="inl">SaveChangesAsync</code>… neblokujte vlákna při I/O.</p></div>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>hromadný update (EF 7+, v EF 10 i pro JSON sloupce)</span></div>
+<pre class="code small" data-lang="cs">await db.Blogs.Where(b =&gt; b.Rating &lt; 2)
+    .ExecuteUpdateAsync(s =&gt; s.SetProperty(b =&gt; b.Archived, true));
+// → jeden UPDATE Blogs SET Archived = 1 WHERE Rating &lt; 2</pre></div>
+  </div>
+</section>
+
+<!-- ============ 21 · TIPY: MIGRACE V PRODUKCI ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">Tipy &amp; triky</span><h2>Migrace v produkci &amp; tajemství</h2></header>
+  <div class="two">
+    <div>
+      <ul class="list compact">
+        <li>Aplikovanou migraci <strong>nikdy zpětně neupravovat</strong> – vždy přidat novou</li>
+        <li>Vygenerovanou migraci si <strong>přečtěte</strong> (hlavně <code class="inl">DROP</code>…) než ji pustíte dál</li>
+        <li>Nasazení: <strong>SQL skript</strong> (<code class="inl">--idempotent</code>) nebo <strong>migration bundle</strong><span class="sub"><code class="inl">Database.Migrate()</code> při startu jen s rozmyslem – více instancí = souběh</span></li>
+        <li><code class="inl">EnsureCreated()</code> jen pro prototypy a testy – <strong>nemíchat s migracemi</strong></li>
+        <li>Před migrací v produkci: <strong>záloha</strong>. Vždy.</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <h4 class="hl-a">Connection stringy &amp; tajemství</h4>
+        <ul class="list compact" style="margin-top:8px">
+          <li>nikdy do Gitu – vývoj: <strong>user secrets</strong></li>
+          <li>produkce: proměnné prostředí / Key Vault</li>
+          <li><code class="inl">EnableSensitiveDataLogging</code> jen ve vývoji</li>
+        </ul>
+      </div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>terminál</span></div>
+<pre class="code small" data-lang="cli">dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:Default" "Server=…"
+
+# samospustitelný balíček migrací pro CI/CD
+dotnet ef migrations bundle --self-contained</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 22 · POKROČILÁ TÉMATA ============ -->
+<section class="slide">
+  <header><span class="badge b-pokrocile">Pokročilé</span><h2>Pokročilá témata <span class="dim">– kam dál</span></h2></header>
+  <div class="content">
+    <div class="grid4" style="grid-template-rows:1fr 1fr;flex:1">
+      <div class="card"><h4 class="hl-r">Global query filters</h4><p>Automatický filtr na každý dotaz – soft delete, multitenancy.</p></div>
+      <div class="card"><h4 class="hl-r">Interceptory</h4><p>Vlastní logika kolem dotazů a SaveChanges – audit, logování, cache.</p></div>
+      <div class="card"><h4 class="hl-r">Souběžnost</h4><p>Optimistická kontrola přes concurrency token / <code class="inl">rowversion</code>.</p></div>
+      <div class="card"><h4 class="hl-r">Transakce</h4><p><code class="inl">SaveChanges</code> je atomický; více kroků → <code class="inl">BeginTransaction</code>.</p></div>
+      <div class="card"><h4 class="hl-r">JSON sloupce</h4><p>Dokumenty uvnitř relační DB, dotazovatelné běžným LINQ.</p></div>
+      <div class="card"><h4 class="hl-r">Value converters</h4><p>Vlastní mapování typů – enum → string, silné ID typy…</p></div>
+      <div class="card"><h4 class="hl-r">Compiled models</h4><p>Rychlejší start aplikací s velkým modelem (stovky entit).</p></div>
+      <div class="card"><h4 class="hl-r">Raw SQL</h4><p><code class="inl">FromSql</code> / <code class="inl">SqlQuery</code>, když LINQ nestačí – bezpečně s parametry.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 23 · NOVINKY EF CORE 10 ============ -->
+<section class="slide">
+  <header><span class="badge b-pokrocile">Pokročilé</span><h2>Novinky v EF Core 10 <span class="dim">(výběr)</span></h2></header>
+  <div class="two w46">
+    <div>
+      <ul class="list compact" style="margin-top:2px">
+        <li><strong>LeftJoin / RightJoin</strong> – přímo jako LINQ operátory</li>
+        <li><strong>Pojmenované query filtry</strong> – více filtrů na entitu, cílené vypínání</li>
+        <li><strong>ExecuteUpdateAsync s běžnou lambdou</strong> – podmíněné <code class="inl">SetProperty</code></li>
+        <li><strong>Complex types</strong> – JSON mapování, podpora <code class="inl">struct</code></li>
+        <li><strong>Vektorové vyhledávání</strong> na Azure SQL – AI / RAG scénáře</li>
+        <li><strong>Cosmos DB</strong>: fulltext + hybridní vyhledávání (RRF)</li>
+        <li>Chytřejší <strong>parametrizace kolekcí</strong> – stabilnější plan cache</li>
+        <li><strong>Bezpečnost</strong>: redakce hodnot v lozích, analyzátor SQL injection</li>
+      </ul>
+    </div>
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>ochutnávka</span></div>
+<pre class="code small" data-lang="cs">// LeftJoin jako plnohodnotný operátor
+var q = db.Students.LeftJoin(db.Departments,
+    s =&gt; s.DepartmentId, d =&gt; d.Id,
+    (s, d) =&gt; new { s.Name, Dept = d.Name ?? "–" });
+
+// pojmenované query filtry…
+mb.Entity&lt;Blog&gt;()
+  .HasQueryFilter("SoftDelete", b =&gt; !b.IsDeleted)
+  .HasQueryFilter("Tenant",
+      b =&gt; b.TenantId == tenantId);
+
+// …a jejich cílené vypnutí v dotazu
+var vse = await db.Blogs
+    .IgnoreQueryFilters(["SoftDelete"])
+    .ToListAsync();</pre></div>
+  </div>
+</section>
+
+<!-- ============ 24 · SHRNUTÍ ============ -->
+<section class="slide">
+  <header><span class="badge b-zaver">Závěr</span><h2>Co si odnést</h2></header>
+  <div class="content" style="justify-content:center">
+    <ul class="list checks" style="max-width:1040px">
+      <li><strong>ORM mapuje objekty ⇄ tabulky</strong> – EF Core je standardní ORM pro .NET; vy píšete LINQ, SQL vzniká pod kapotou</li>
+      <li><strong>Code First</strong> = model v C# + migrace &nbsp;·&nbsp; <strong>Database First</strong> = scaffolding existující databáze (klidně jen jednou na startu)</li>
+      <li><strong>Konzole / WPF</strong>: context si vytváříte a uklízíte sami &nbsp;·&nbsp; <strong>ASP.NET Core</strong>: <code class="inl">AddDbContext</code> + DI, scoped na request</li>
+      <li>DbContext: <strong>krátká životnost</strong>, není thread-safe, vždy <code class="inl">await</code></li>
+      <li>Výkon: <code class="inl">AsNoTracking</code>, <code class="inl">Include</code> / projekce místo N+1, stránkování, <code class="inl">ExecuteUpdate</code></li>
+      <li><strong>EF Core 10 + .NET 10 = LTS do listopadu 2028</strong> – solidní základ na další roky</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 25 · ZDROJE & DOTAZY ============ -->
+<section class="slide s-title" style="padding-bottom:60px">
+  <h1 style="font-size:62px">Děkuji za pozornost</h1>
+  <div class="sub" style="margin-top:16px">Prostor pro vaše dotazy</div>
+  <div class="grid3" style="margin-top:52px;width:100%;max-width:1080px">
+    <div class="card" style="text-align:left"><h4 class="hl-c">Dokumentace</h4><p class="mono" style="font-family:'JetBrains Mono',monospace;font-size:13.5px;margin-top:6px;color:#9fd8f8">learn.microsoft.com/ef/core</p><p style="margin-top:6px">Oficiální dokumentace EF Core – tutoriály i reference.</p></div>
+    <div class="card" style="text-align:left"><h4 class="hl-p">Novinky v EF 10</h4><p class="mono" style="font-family:'JetBrains Mono',monospace;font-size:13.5px;margin-top:6px;color:#cdc4ff">…/ef-core-10.0/whatsnew</p><p style="margin-top:6px">What's New in EF Core 10 – přehled všech novinek s ukázkami.</p></div>
+    <div class="card" style="text-align:left"><h4 class="hl-g">Zdrojový kód</h4><p class="mono" style="font-family:'JetBrains Mono',monospace;font-size:13.5px;margin-top:6px;color:#6ee79c">github.com/dotnet/efcore</p><p style="margin-top:6px">Repozitář EF Core – issues, diskuze, plány dalších verzí.</p></div>
+  </div>
+</section>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="brand"><span class="dot"></span>Entity Framework Core 10 · školení</div>
+  <div class="right">
+    <span class="hint">← → listování &nbsp;·&nbsp; F celá obrazovka</span>
+    <button class="navbtn" id="prev" aria-label="Předchozí slide">‹</button>
+    <button class="navbtn" id="next" aria-label="Další slide">›</button>
+    <span id="counter">1 / 25</span>
+  </div>
+</div>
+<div id="bar"></div>
+
+</div>
+</div>
+
+<style>
+ul.checks li{font-size:21.5px;margin-bottom:19px}
+ul.checks li::before{content:'✓';color:var(--green)}
+#deck{transform:translate(-50%,-50%)}
+</style>
+
+<script>
+/* ===== zvýraznění syntaxe ===== */
+const KW = new Set(('using namespace class struct record interface enum public private protected internal static readonly required var new return void int string bool long double decimal float char object async await override virtual abstract sealed partial get set init if else foreach for while do switch case break continue default in out ref params is as null true false this base throw try catch finally where select from orderby group by let join on equals into when not and or with nameof typeof event delegate yield lock').split(' '));
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function hlCS(src){
+  const re = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|[$@]+"(?:[^"\\]|\\.)*"|"(?:[^"\\]|\\.)*"|\b\d[\d_]*(?:\.\d+)?[fFdDmMuUlL]?\b|[A-Za-z_][A-Za-z0-9_]*|[\s\S]/g;
+  const toks = src.match(re) || [];
+  let out = '';
+  for (let j = 0; j < toks.length; j++){
+    const tk = toks[j];
+    if (tk.startsWith('//') || tk.startsWith('/*')) { out += '<span class="c">'+esc(tk)+'</span>'; continue; }
+    if ((tk[0] === '"' || tk[0] === '$' || tk[0] === '@') && tk.includes('"')) { out += '<span class="s">'+esc(tk)+'</span>'; continue; }
+    if (/^\d/.test(tk)) { out += '<span class="n">'+esc(tk)+'</span>'; continue; }
+    if (/^[A-Za-z_]/.test(tk)){
+      if (KW.has(tk)) { out += '<span class="k">'+esc(tk)+'</span>'; continue; }
+      let p = j-1; while (p >= 0 && /^\s+$/.test(toks[p])) p--;
+      let n = j+1; while (n < toks.length && /^\s+$/.test(toks[n])) n++;
+      const prevCh = p >= 0 ? toks[p].slice(-1) : '';
+      const nextCh = n < toks.length ? toks[n][0] : '';
+      if (prevCh === '.') { out += (nextCh === '(' || nextCh === '<') ? '<span class="f">'+esc(tk)+'</span>' : esc(tk); continue; }
+      if (/[A-Z]/.test(tk[0])) { out += '<span class="t">'+esc(tk)+'</span>'; continue; }
+      out += esc(tk); continue;
+    }
+    out += esc(tk);
+  }
+  return out;
+}
+
+function hlCLI(src){
+  return src.split('\n').map(line => {
+    if (/^\s*#/.test(line)) return '<span class="c">'+esc(line)+'</span>';
+    let l = esc(line);
+    l = l.replace(/"[^"]*"/g, m => '<span class="s">'+m+'</span>');
+    l = l.replace(/(^|\s)(dotnet)(?=\s)/g, (m,a,b) => a+'<span class="cmd">'+b+'</span>');
+    l = l.replace(/--[a-z-]+/g, m => '<span class="flag">'+m+'</span>');
+    return l;
+  }).join('\n');
+}
+
+function hlJSON(src){
+  let l = esc(src);
+  l = l.replace(/"([^"]*)"(\s*:)/g, '<span class="t">"$1"</span>$2');
+  l = l.replace(/(:\s*)"([^"]*)"/g, '$1<span class="s">"$2"</span>');
+  return l;
+}
+
+document.querySelectorAll('pre.code[data-lang]').forEach(pre => {
+  const lang = pre.dataset.lang, src = pre.textContent;
+  if (lang === 'cs') pre.innerHTML = hlCS(src);
+  else if (lang === 'cli') pre.innerHTML = hlCLI(src);
+  else if (lang === 'json') pre.innerHTML = hlJSON(src);
+});
+
+/* ===== navigace ===== */
+const slides = [...document.querySelectorAll('.slide')];
+const counter = document.getElementById('counter');
+const bar = document.getElementById('bar');
+const deck = document.getElementById('deck');
+let cur = 0;
+slides[0].classList.add('active');
+
+function go(n){
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur && slides[cur].classList.contains('active')) { paint(); return; }
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  paint();
+}
+function paint(){
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  bar.style.width = ((cur+1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (cur+1));
+}
+
+function fit(){
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  deck.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+addEventListener('resize', fit); fit();
+
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') { e.preventDefault(); go(cur+1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); go(cur-1); }
+  else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(slides.length-1); }
+  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+});
+
+document.getElementById('prev').addEventListener('click', e => { go(cur-1); e.currentTarget.blur(); });
+document.getElementById('next').addEventListener('click', e => { go(cur+1); e.currentTarget.blur(); });
+
+let tx = null;
+addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive:true});
+addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+  tx = null;
+}, {passive:true});
+
+addEventListener('hashchange', () => {
+  const n = parseInt(location.hash.slice(1));
+  if (!isNaN(n) && n >= 1) go(n-1);
+});
+const h = parseInt(location.hash.slice(1));
+if (!isNaN(h) && h >= 1) go(h-1);
+paint();
+</script>
+</body>
+</html>

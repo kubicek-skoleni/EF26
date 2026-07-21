@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logování SQL dotazů – Školení EF Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;
+  --panel:#131826;
+  --panel2:#0f1420;
+  --code-bg:#0e1320;
+  --border:rgba(148,163,184,.15);
+  --text:#e8edf6;
+  --muted:#939eb4;
+  --purple:#8b7cf8;
+  --cyan:#38bdf8;
+  --green:#4ade80;
+  --amber:#fbbf24;
+  --rose:#fb7185;
+  --blue:#7aa2ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0}
+#deck{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:center center;background:var(--bg);border-radius:0;overflow:hidden}
+/* dekorativní pozadí */
+#deck::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(148,163,184,.055) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 90% 80% at 50% 45%,#000 30%,transparent 100%);pointer-events:none}
+.glow{position:absolute;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.glow.g1{width:520px;height:520px;right:-160px;top:-200px;background:rgba(139,124,248,.17)}
+.glow.g2{width:460px;height:460px;left:-170px;bottom:-210px;background:rgba(56,189,248,.11)}
+
+/* ====== slidy ====== */
+.slide{position:absolute;inset:0;padding:52px 74px 66px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .38s ease,transform .38s ease,visibility .38s;z-index:1}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide > header{margin-bottom:24px;flex:none}
+.slide h2{font-size:39px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-top:10px}
+.slide h2 .dim{color:var(--muted);font-weight:600}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+
+.badge{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:5px 13px;border-radius:999px;border:1px solid}
+.b-zaklady{color:#af9fff;background:rgba(139,124,248,.12);border-color:rgba(139,124,248,.4)}
+.b-pristupy{color:#67cdf8;background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.4)}
+.b-praxe{color:#6ee79c;background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.38)}
+.b-tipy{color:#fcd253;background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.38)}
+.b-pokrocile{color:#fc94a2;background:rgba(251,113,133,.10);border-color:rgba(251,113,133,.4)}
+.b-zaver{color:#9db8ff;background:rgba(122,162,255,.10);border-color:rgba(122,162,255,.4)}
+
+/* layouty */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:26px;flex:1;min-height:0;align-content:start}
+.two.w64{grid-template-columns:1.55fr 1fr}
+.two.w46{grid-template-columns:1fr 1.55fr}
+.stack{display:flex;flex-direction:column;gap:16px;min-height:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+ul.list{list-style:none}
+ul.list li{position:relative;padding-left:26px;margin-bottom:13px;font-size:20px;line-height:1.42;color:var(--text)}
+ul.list li::before{content:'▸';position:absolute;left:2px;top:0;color:var(--purple);font-weight:700}
+ul.list li strong{font-weight:700;color:#fff}
+ul.list.compact li{font-size:18px;margin-bottom:10px}
+ul.list li .sub{display:block;font-size:16px;color:var(--muted);margin-top:2px;line-height:1.4}
+.mut{color:var(--muted)}
+.hl-p{color:#af9fff;font-weight:600}.hl-c{color:#67cdf8;font-weight:600}.hl-g{color:#6ee79c;font-weight:600}.hl-a{color:#fcd253;font-weight:600}.hl-r{color:#fc94a2;font-weight:600}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:17px 19px}
+.card h4{font-size:18px;font-weight:700;margin-bottom:6px}
+.card p{font-size:15.5px;color:var(--muted);line-height:1.42}
+.callout{border-left:3px solid var(--purple);background:rgba(139,124,248,.09);padding:13px 18px;border-radius:0 12px 12px 0;font-size:18.5px;line-height:1.45}
+.callout.cyan{border-color:var(--cyan);background:rgba(56,189,248,.08)}
+.callout.green{border-color:var(--green);background:rgba(74,222,128,.08)}
+.callout.amber{border-color:var(--amber);background:rgba(251,191,36,.08)}
+.callout.rose{border-color:var(--rose);background:rgba(251,113,133,.08)}
+.callout b{color:#fff}
+
+/* kód */
+.codebox{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.codehead{display:flex;align-items:center;gap:8px;padding:9px 15px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.codehead .dots{display:flex;gap:5px}
+.codehead .dots i{width:9px;height:9px;border-radius:50%;display:block}
+.codehead .dots i:nth-child(1){background:#f66} .codehead .dots i:nth-child(2){background:#fb5} .codehead .dots i:nth-child(3){background:#5c5}
+.codehead span{font:600 12.5px 'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.03em}
+pre.code{font:400 16.5px/1.55 'JetBrains Mono',Consolas,monospace;padding:13px 18px;overflow:hidden;tab-size:4;white-space:pre;color:#dce3f0}
+pre.code.small{font-size:15px;line-height:1.5}
+pre.code.big{font-size:18px;line-height:1.6}
+.code .k{color:#c79bff}
+.code .t{color:#5eead4}
+.code .s{color:#9ece6a}
+.code .c{color:#5f6b80;font-style:italic}
+.code .f{color:#82aaff}
+.code .n{color:#ff9e64}
+.code .flag{color:#5eead4}
+.code .cmd{color:#c79bff;font-weight:600}
+.code .err{color:#fc94a2}
+code.inl{font:600 .92em 'JetBrains Mono',monospace;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.25);color:#cdc4ff;padding:1px 7px;border-radius:7px;white-space:nowrap}
+
+/* tabulky */
+table.tbl{width:100%;border-collapse:collapse;font-size:18.5px}
+.tbl th{text-align:left;font-weight:700;color:#c9d3ea;background:rgba(139,124,248,.10);padding:11px 16px;border-bottom:1px solid var(--border)}
+.tbl th:first-child{border-radius:12px 0 0 0}.tbl th:last-child{border-radius:0 12px 0 0}
+.tbl td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
+.tbl td:first-child{color:var(--muted);font-weight:600;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .yes{color:var(--green);font-weight:700}
+.tbl .no{color:var(--rose);font-weight:700}
+.tblwrap{background:var(--panel2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{font-size:15.5px;font-weight:600;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:#cfd8ea;white-space:nowrap}
+.chip b{color:var(--cyan)}
+
+/* titulní slide */
+.s-title{justify-content:center;align-items:center;text-align:center;padding-bottom:90px}
+.s-title .pill{font:700 14px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#67cdf8;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.35);border-radius:999px;padding:8px 20px;margin-bottom:30px}
+.s-title h1{font-size:78px;font-weight:900;letter-spacing:-2.5px;line-height:1.04;background:linear-gradient(105deg,#fff 20%,#b9aaff 55%,#67cdf8 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.s-title .sub{font-size:25px;color:var(--muted);margin-top:24px;font-weight:500}
+.s-title .meta{margin-top:44px;font-size:16.5px;color:var(--muted);display:flex;gap:14px;align-items:center}
+.s-title .meta i{width:5px;height:5px;border-radius:50%;background:var(--purple);display:inline-block}
+
+/* agenda */
+.agenda{display:flex;flex-direction:column;gap:15px;flex:1;justify-content:center;max-width:960px}
+.agenda .it{display:flex;align-items:center;gap:22px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px 24px}
+.agenda .num{font:800 25px 'JetBrains Mono',monospace;width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.agenda .it h3{font-size:22.5px;font-weight:700}
+.agenda .it p{font-size:16px;color:var(--muted);margin-top:2px}
+.n1{color:#af9fff;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.35)}
+.n2{color:#67cdf8;background:rgba(56,189,248,.11);border:1px solid rgba(56,189,248,.35)}
+.n3{color:#6ee79c;background:rgba(74,222,128,.11);border:1px solid rgba(74,222,128,.32)}
+.n4{color:#fcd253;background:rgba(251,191,36,.11);border:1px solid rgba(251,191,36,.32)}
+.n5{color:#fc94a2;background:rgba(251,113,133,.11);border:1px solid rgba(251,113,133,.35)}
+
+/* diagramy */
+.diag{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.diag svg{width:100%;height:100%;max-height:100%}
+svg text{font-family:'Inter',system-ui,sans-serif}
+svg .mono{font-family:'JetBrains Mono',monospace}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;bottom:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;color:var(--muted);z-index:5;user-select:none}
+#hud .brand{display:flex;gap:9px;align-items:center;font-weight:600;letter-spacing:.02em}
+#hud .brand .dot{width:7px;height:7px;border-radius:2px;background:linear-gradient(135deg,var(--purple),var(--cyan))}
+#hud .right{display:flex;align-items:center;gap:14px}
+#hud .hint{opacity:.6;font-size:12px}
+#counter{font:600 13px 'JetBrains Mono',monospace;min-width:58px;text-align:right}
+.navbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.navbtn:hover{color:#fff;border-color:var(--purple)}
+#bar{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));width:0;transition:width .35s ease;z-index:6;border-radius:0 3px 3px 0}
+
+/* tisk */
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{overflow:visible;background:var(--bg)}
+  #stage{position:static}
+  #deck{position:relative;left:0;top:0;transform:none!important;width:1280px;height:auto;overflow:visible}
+  .slide{position:relative;opacity:1!important;visibility:visible!important;transform:none!important;width:1280px;height:720px;page-break-after:always;break-after:page;overflow:hidden}
+  #hud,#bar,.navbtn{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="deck">
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<!-- ============ 1 · TITULNÍ ============ -->
+<section class="slide s-title">
+  <div class="pill">DOPLNĚK ŠKOLENÍ &nbsp;·&nbsp; DIAGNOSTIKA</div>
+  <h1 style="font-size:68px">Logování SQL dotazů</h1>
+  <div class="sub">Jak vidět, co EF Core opravdu posílá na SQL Server</div>
+  <div class="meta"><span>Školení Entity Framework Core</span><i></i><span>EF Core 9 / 10</span><i></i><span>2026</span></div>
+</section>
+
+<!-- ============ 2 · JE TO DEFAULT? ============ -->
+<section class="slide">
+  <header><span class="badge b-zaklady">Motivace</span><h2>Je to zapnuté od začátku?</h2></header>
+  <div class="content stack" style="justify-content:center">
+    <div class="two" style="flex:none">
+      <div class="card" style="border-color:rgba(251,113,133,.45)">
+        <h4><span class="hl-r">Konzolová aplikace – NE</span></h4>
+        <p style="font-size:16.5px;margin-top:8px;color:var(--text)">Bez konfigurace se neloguje <b>vůbec nic</b> – výstup prostě není kam poslat. Zapíná se jedním řádkem:</p>
+        <p style="margin-top:12px"><code class="inl" style="font-size:15px">.LogTo(Console.WriteLine)</code></p>
+        <p style="font-size:15px;margin-top:10px">Žádný NuGet balíček navíc není potřeba.</p>
+      </div>
+      <div class="card" style="border-color:rgba(74,222,128,.45)">
+        <h4><span class="hl-g">ASP.NET Core – v praxi ANO</span></h4>
+        <p style="font-size:16.5px;margin-top:8px;color:var(--text)">EF se <b>automaticky napojí na ILogger</b>. Výchozí šablona loguje úroveň Information do konzole, takže SQL vidíte hned při <code class="inl">dotnet run</code>.</p>
+        <p style="font-size:15px;margin-top:10px">Řídí se to ale nastavením v <code class="inl">appsettings.json</code> – když si ho někdo ztlumí, SQL zmizí.</p>
+      </div>
+    </div>
+    <div class="callout" style="font-size:17px">Platí pro všechny poskytovatele včetně <b>Microsoft.EntityFrameworkCore.SqlServer</b> – loguje samotné EF, takže vidíte přesně to SQL (včetně parametrů), které odchází na SQL Server.</div>
+  </div>
+</section>
+
+<!-- ============ 3 · KONZOLE: LOGTO ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">Konzole / WPF</span><h2>LogTo <span class="dim">– jednoduché logování</span></h2></header>
+  <div class="two w64">
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>AppDbContext.cs</span></div>
+<pre class="code small" data-lang="cs">public class AppDbContext : DbContext
+{
+    public DbSet&lt;Blog&gt; Blogs =&gt; Set&lt;Blog&gt;();
+
+    protected override void OnConfiguring(
+        DbContextOptionsBuilder options)
+        =&gt; options
+            .UseSqlServer("Server=.;Database=Blogy;…")
+            .LogTo(Console.WriteLine,
+                   LogLevel.Information);   // ✅ SQL v konzoli
+}</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>varianta: jen SQL příkazy, nic jiného</span></div>
+<pre class="code small" data-lang="cs">.LogTo(Console.WriteLine,
+       [DbLoggerCategory.Database.Command.Name],
+       LogLevel.Information)</pre></div>
+    </div>
+    <div class="stack">
+      <ul class="list compact">
+        <li><code class="inl">LogTo</code> je nejrychlejší cesta – <strong>bez balíčků</strong>, jen jeden řádek v <code class="inl">OnConfiguring</code></li>
+        <li><code class="inl">LogLevel.Information</code> = provedené SQL příkazy<span class="sub">bez něj i spousta Debug hlášek navíc</span></li>
+        <li>Filtr kategorií <code class="inl">Database.Command</code> = čistý výpis jen SQL</li>
+        <li>Jiné cíle: <code class="inl">Debug.WriteLine</code> (okno Output ve VS), zápis do souboru přes <code class="inl">StreamWriter</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · VÝSTUP A PARAMETRY ============ -->
+<section class="slide">
+  <header><span class="badge b-praxe">Konzole / WPF</span><h2>Co uvidíte <span class="dim">– a kde jsou hodnoty parametrů</span></h2></header>
+  <div class="two w64">
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>výstup v konzoli</span></div>
+<pre class="code small"><span class="t">info:</span> <span class="c">Microsoft.EntityFrameworkCore.Database.Command[20101]</span>
+      Executed DbCommand <span class="n">(12ms)</span>
+      [Parameters=[@__minRating_0=<span class="s">'?'</span> (DbType = Int32)],
+       CommandType='Text', CommandTimeout='30']
+      <span class="k">SELECT</span> [b].[Id], [b].[Title], [b].[Rating]
+      <span class="k">FROM</span> [Blogs] <span class="k">AS</span> [b]
+      <span class="k">WHERE</span> [b].[Rating] &gt;= @__minRating_0</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>zobrazit skutečné hodnoty parametrů</span></div>
+<pre class="code small" data-lang="cs">options
+    .LogTo(Console.WriteLine, LogLevel.Information)
+    .EnableSensitiveDataLogging()   // '?' → '4'
+    .EnableDetailedErrors();</pre></div>
+    </div>
+    <div class="stack">
+      <ul class="list compact">
+        <li>Hodnoty parametrů jsou <strong>default skryté</strong> – ve výpisu je místo nich <code class="inl">'?'</code></li>
+        <li><code class="inl">EnableSensitiveDataLogging()</code> je odkryje<span class="sub">do logů se dostanou osobní údaje – <b>jen pro vývoj!</b></span></li>
+        <li><code class="inl">EnableDetailedErrors()</code> – podrobnější chybové hlášky</li>
+        <li>Z výpisu vidíte i <strong>čas provedení</strong> (12ms) – první vodítko při ladění výkonu</li>
+      </ul>
+      <div class="callout amber" style="font-size:16px">V produkci citlivé logování <b>nikdy</b> – a běžné logování SQL jen s rozmyslem (objem logů, výkon).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 · ASP.NET CORE ============ -->
+<section class="slide">
+  <header><span class="badge b-tipy">ASP.NET Core</span><h2>ILogger + appsettings.json</h2></header>
+  <div class="two w64">
+    <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>appsettings.Development.json</span></div>
+<pre class="code" data-lang="json">{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+
+      "Microsoft.EntityFrameworkCore.Database.Command":
+        "Information"
+    }
+  }
+}</pre></div>
+    <div class="stack">
+      <ul class="list compact">
+        <li><code class="inl">AddDbContext</code> napojí EF na <code class="inl">ILogger</code> <strong>automaticky</strong> – v C# kódu není potřeba nic</li>
+        <li>Výchozí šablona (<code class="inl">Default = Information</code>) → SQL v konzoli <strong>uvidíte rovnou</strong></li>
+        <li>Jistota = <strong>explicitní kategorie</strong> <code class="inl">Microsoft.EntityFrameworkCore.Database.Command</code><span class="sub">funguje nezávisle na tom, jak je ztlumený zbytek</span></li>
+        <li>Produkce: ztlumte ji na <code class="inl">"Warning"</code></li>
+        <li>Přes <code class="inl">ILogger</code> to jde i do Serilogu, souborů, Seq…</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 · TOQUERYSTRING + SHRNUTÍ ============ -->
+<section class="slide">
+  <header><span class="badge b-zaver">Bonus</span><h2>ToQueryString() <span class="dim">a shrnutí</span></h2></header>
+  <div class="two w64">
+    <div class="stack">
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>SQL jednoho dotazu – bez logování a bez spuštění</span></div>
+<pre class="code small" data-lang="cs">var dotaz = db.Blogs
+    .Where(b =&gt; b.Rating &gt;= 4)
+    .OrderByDescending(b =&gt; b.Rating);
+
+Console.WriteLine(dotaz.ToQueryString());</pre></div>
+      <div class="codebox"><div class="codehead"><div class="dots"><i></i><i></i><i></i></div><span>výstup</span></div>
+<pre class="code small"><span class="k">SELECT</span> [b].[Id], [b].[Title], [b].[Rating]
+<span class="k">FROM</span> [Blogs] <span class="k">AS</span> [b]
+<span class="k">WHERE</span> [b].[Rating] &gt;= @__minRating_0
+<span class="k">ORDER BY</span> [b].[Rating] <span class="k">DESC</span></pre></div>
+    </div>
+    <div class="stack">
+      <div class="tblwrap">
+        <table class="tbl" style="font-size:16px">
+          <tr><th>Potřebuji</th><th>Použiji</th></tr>
+          <tr><td style="white-space:normal">SQL v konzolovce</td><td><code class="inl">.LogTo(Console.WriteLine, …)</code></td></tr>
+          <tr><td style="white-space:normal">SQL v ASP.NET Core</td><td>appsettings: kategorie <code class="inl">…Database.Command</code></td></tr>
+          <tr><td style="white-space:normal">hodnoty parametrů</td><td><code class="inl">EnableSensitiveDataLogging()</code> <span class="mut">(jen vývoj)</span></td></tr>
+          <tr><td style="white-space:normal">SQL jednoho dotazu</td><td><code class="inl">ToQueryString()</code></td></tr>
+        </table>
+      </div>
+      <div class="callout green" style="font-size:16px">Skvělý návyk ze školení: <b>napiš LINQ → podívej se na SQL</b>. Kdo se dívá, toho N+1 ani kartézská exploze nepřekvapí.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="brand"><span class="dot"></span>EF Core · logování SQL</div>
+  <div class="right">
+    <span class="hint">← → listování &nbsp;·&nbsp; F celá obrazovka</span>
+    <button class="navbtn" id="prev" aria-label="Předchozí slide">‹</button>
+    <button class="navbtn" id="next" aria-label="Další slide">›</button>
+    <span id="counter">1 / 6</span>
+  </div>
+</div>
+<div id="bar"></div>
+
+</div>
+</div>
+
+<style>
+#deck{transform:translate(-50%,-50%)}
+</style>
+<script>
+const KW = new Set(('using namespace class struct record interface enum public private protected internal static readonly required var new return void int string bool long double decimal float char object async await override virtual abstract sealed partial get set init if else foreach for while do switch case break continue default in out ref params is as null true false this base throw try catch finally where select from orderby group by let join on equals into when not and or with nameof typeof event delegate yield lock').split(' '));
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function hlCS(src){
+  const re = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|[$@]+"(?:[^"\\]|\\.)*"|"(?:[^"\\]|\\.)*"|\b\d[\d_]*(?:\.\d+)?[fFdDmMuUlL]?\b|[A-Za-z_][A-Za-z0-9_]*|[\s\S]/g;
+  const toks = src.match(re) || [];
+  let out = '';
+  for (let j = 0; j < toks.length; j++){
+    const tk = toks[j];
+    if (tk.startsWith('//') || tk.startsWith('/*')) { out += '<span class="c">'+esc(tk)+'</span>'; continue; }
+    if ((tk[0] === '"' || tk[0] === '$' || tk[0] === '@') && tk.includes('"')) { out += '<span class="s">'+esc(tk)+'</span>'; continue; }
+    if (/^\d/.test(tk)) { out += '<span class="n">'+esc(tk)+'</span>'; continue; }
+    if (/^[A-Za-z_]/.test(tk)){
+      if (KW.has(tk)) { out += '<span class="k">'+esc(tk)+'</span>'; continue; }
+      let p = j-1; while (p >= 0 && /^\s+$/.test(toks[p])) p--;
+      let n = j+1; while (n < toks.length && /^\s+$/.test(toks[n])) n++;
+      const prevCh = p >= 0 ? toks[p].slice(-1) : '';
+      const nextCh = n < toks.length ? toks[n][0] : '';
+      if (prevCh === '.') { out += (nextCh === '(' || nextCh === '<') ? '<span class="f">'+esc(tk)+'</span>' : esc(tk); continue; }
+      if (/[A-Z]/.test(tk[0])) { out += '<span class="t">'+esc(tk)+'</span>'; continue; }
+      out += esc(tk); continue;
+    }
+    out += esc(tk);
+  }
+  return out;
+}
+
+function hlJSON(src){
+  let l = esc(src);
+  l = l.replace(/"([^"]*)"(\s*:)/g, '<span class="t">"$1"</span>$2');
+  l = l.replace(/(:\s*)"([^"]*)"/g, '$1<span class="s">"$2"</span>');
+  return l;
+}
+
+document.querySelectorAll('pre.code[data-lang="cs"]').forEach(pre => { pre.innerHTML = hlCS(pre.textContent); });
+document.querySelectorAll('pre.code[data-lang="json"]').forEach(pre => { pre.innerHTML = hlJSON(pre.textContent); });
+
+const slides = [...document.querySelectorAll('.slide')];
+const counter = document.getElementById('counter');
+const bar = document.getElementById('bar');
+const deck = document.getElementById('deck');
+let cur = 0;
+slides[0].classList.add('active');
+
+function go(n){
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur && slides[cur].classList.contains('active')) { paint(); return; }
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  paint();
+}
+function paint(){
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  bar.style.width = ((cur+1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (cur+1));
+}
+function fit(){
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  deck.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+addEventListener('resize', fit); fit();
+
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') { e.preventDefault(); go(cur+1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); go(cur-1); }
+  else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(slides.length-1); }
+  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+});
+document.getElementById('prev').addEventListener('click', e => { go(cur-1); e.currentTarget.blur(); });
+document.getElementById('next').addEventListener('click', e => { go(cur+1); e.currentTarget.blur(); });
+
+let tx = null;
+addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive:true});
+addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+  tx = null;
+}, {passive:true});
+
+addEventListener('hashchange', () => {
+  const n = parseInt(location.hash.slice(1));
+  if (!isNaN(n) && n >= 1) go(n-1);
+});
+const h = parseInt(location.hash.slice(1));
+if (!isNaN(h) && h >= 1) go(h-1);
+paint();
+</script>
+</body>
+</html>

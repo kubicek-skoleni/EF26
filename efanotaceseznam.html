@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datové anotace v EF Core – referenční přehled</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14; --panel:#131826; --panel2:#0f1420; --code-bg:#0e1320;
+  --border:rgba(148,163,184,.15); --text:#e8edf6; --muted:#939eb4;
+  --purple:#8b7cf8; --cyan:#38bdf8; --green:#4ade80; --amber:#fbbf24; --rose:#fb7185; --blue:#7aa2ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(rgba(148,163,184,.05) 1px,transparent 1px);background-size:26px 26px}
+.wrap{max-width:1150px;margin:0 auto;padding:52px 28px 70px}
+h1{font-size:42px;font-weight:900;letter-spacing:-1.2px;line-height:1.1;background:linear-gradient(105deg,#fff 25%,#b9aaff 60%,#67cdf8 95%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted);font-size:17px;margin-top:10px;line-height:1.5;max-width:820px}
+.pill{display:inline-block;font:700 12.5px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#67cdf8;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.35);border-radius:999px;padding:6px 14px;margin-bottom:18px}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
+.legend .lt{font-size:13px;color:var(--muted);margin-right:2px}
+.ns{display:inline-block;font:600 11.5px 'JetBrains Mono',monospace;padding:3px 9px;border-radius:7px;white-space:nowrap}
+.ns-da{color:#9db8ff;background:rgba(122,162,255,.12);border:1px solid rgba(122,162,255,.35)}
+.ns-schema{color:#67cdf8;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.35)}
+.ns-ef{color:#af9fff;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.4)}
+.ver{display:inline-block;font:700 11px 'JetBrains Mono',monospace;color:#6ee79c;background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.32);padding:3px 8px;border-radius:7px;white-space:nowrap}
+
+.toolbar{position:sticky;top:0;z-index:10;background:rgba(10,13,20,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);margin:28px -28px 0;padding:14px 28px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+#filtr{flex:1;min-width:240px;background:var(--panel);border:1px solid var(--border);border-radius:11px;color:var(--text);font:500 15px 'Inter',sans-serif;padding:11px 16px;outline:none}
+#filtr:focus{border-color:var(--purple)}
+#pocet{font:600 13px 'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.toc{display:flex;gap:8px;flex-wrap:wrap}
+.toc a{font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 12px;transition:.15s}
+.toc a:hover{color:#fff;border-color:var(--purple)}
+
+section{margin-top:44px;scroll-margin-top:100px}
+h2{font-size:25px;font-weight:800;letter-spacing:-.4px;padding-left:14px;border-left:4px solid var(--purple);margin-bottom:6px}
+section .sdesc{color:var(--muted);font-size:15px;margin-bottom:16px;padding-left:18px}
+#klice h2{border-color:var(--purple)}
+#mapovani h2{border-color:var(--cyan)}
+#delky h2{border-color:var(--green)}
+#vztahy h2{border-color:var(--amber)}
+#indexy h2{border-color:var(--rose)}
+#ostatni h2{border-color:var(--blue)}
+#validace h2{border-color:#64748b}
+
+.row{display:grid;grid-template-columns:330px 1fr;gap:20px;background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:16px 20px;margin-bottom:10px}
+.row.hide{display:none}
+.sig{font:600 14.5px 'JetBrains Mono',monospace;color:#cdc4ff;word-break:break-word;line-height:1.5}
+.tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.desc{font-size:15.5px;line-height:1.55;color:#d5dcea}
+.desc b{color:#fff}
+.desc .ex{display:block;font:400 13.5px/1.6 'JetBrains Mono',monospace;color:#9ece6a;background:var(--code-bg);border:1px solid var(--border);border-radius:9px;padding:9px 13px;margin-top:9px;overflow-x:auto;white-space:pre}
+.desc .ex i{font-style:italic;color:#5f6b80}
+.desc .warn{color:#fcd253}
+code.inl{font:600 .9em 'JetBrains Mono',monospace;background:rgba(139,124,248,.13);border:1px solid rgba(139,124,248,.25);color:#cdc4ff;padding:1px 6px;border-radius:6px;white-space:nowrap}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.row,.grid2{grid-template-columns:1fr}}
+.codebox{background:var(--code-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.codehead{font:600 12.5px 'JetBrains Mono',monospace;color:var(--muted);padding:9px 15px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+pre.code{font:400 13.5px/1.6 'JetBrains Mono',monospace;padding:13px 16px;overflow-x:auto;color:#dce3f0;white-space:pre}
+.code .k{color:#c79bff}.code .t{color:#5eead4}.code .s{color:#9ece6a}.code .c{color:#5f6b80;font-style:italic}.code .f{color:#82aaff}.code .n{color:#ff9e64}
+.note{border-left:3px solid var(--rose);background:rgba(251,113,133,.07);padding:12px 16px;border-radius:0 11px 11px 0;font-size:14.5px;line-height:1.55;margin-top:14px}
+.note.green{border-color:var(--green);background:rgba(74,222,128,.07)}
+.note.amber{border-color:var(--amber);background:rgba(251,191,36,.07)}
+.note b{color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 13px 'JetBrains Mono',monospace;padding:6px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:#cfd8ea}
+
+footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px;line-height:1.8}
+footer a{color:#67cdf8;text-decoration:none}
+@media print{body{background:#fff;color:#111}.toolbar{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="pill">EF CORE 9 · EF CORE 10 &nbsp;·&nbsp; .NET 9 / .NET 10</div>
+  <h1>Datové anotace v EF Core</h1>
+  <p class="sub">Referenční přehled atributů, kterými se Entity Frameworku předávají informace o modelu přímo v kódu entit. Roztříděno podle účelu; u každého atributu je uveden jmenný prostor a případně verze EF Core, od které je k dispozici.</p>
+  <div class="legend">
+    <span class="lt">Jmenné prostory:</span>
+    <span class="ns ns-da">DataAnnotations</span><span class="lt">= System.ComponentModel.DataAnnotations</span>
+    <span class="ns ns-schema">…Schema</span><span class="lt">= System.ComponentModel.DataAnnotations.Schema</span>
+    <span class="ns ns-ef">EF Core</span><span class="lt">= Microsoft.EntityFrameworkCore (balíček …Abstractions)</span>
+  </div>
+
+  <div class="toolbar">
+    <input id="filtr" type="search" placeholder="Filtrovat atributy… (např. index, klíč, délka)">
+    <span id="pocet"></span>
+    <nav class="toc">
+      <a href="#klice">Klíče</a><a href="#mapovani">Tabulky &amp; sloupce</a><a href="#delky">Povinnost &amp; délky</a><a href="#vztahy">Vztahy</a><a href="#indexy">Indexy</a><a href="#ostatni">Ostatní</a><a href="#validace">Jen validace</a>
+    </nav>
+  </div>
+
+  <!-- ================= KLÍČE ================= -->
+  <section id="klice">
+    <h2>Klíče a identita</h2>
+    <p class="sdesc">Primární klíče, generování hodnot a optimistická souběžnost.</p>
+
+    <div class="row"><div><span class="sig">[Key]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Označí vlastnost jako <b>primární klíč</b>. Bez atributu platí konvence: vlastnost <code class="inl">Id</code> nebo <code class="inl">&lt;NázevTřídy&gt;Id</code>.<span class="ex">[Key]
+public Guid CisloObjednavky { get; set; }</span></div></div>
+
+    <div class="row"><div><span class="sig">[PrimaryKey(nameof(A), nameof(B))]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 7+</span></div></div>
+      <div class="desc"><b>Složený primární klíč</b> – atribut se dává <b>na třídu</b>. Pozor: více <code class="inl">[Key]</code> atributů v EF Core nefunguje; složený klíč jde jen takto, nebo přes Fluent API <code class="inl">HasKey</code>.<span class="ex">[PrimaryKey(nameof(StudentId), nameof(PredmetId))]
+public class Zapis { … }</span></div></div>
+
+    <div class="row"><div><span class="sig">[DatabaseGenerated(…)]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc">Určuje, <b>jak databáze generuje hodnotu</b>: <code class="inl">Identity</code> (při INSERT), <code class="inl">Computed</code> (při INSERT i UPDATE), <code class="inl">None</code> (nikdy – vypne identity).<span class="ex">[DatabaseGenerated(DatabaseGeneratedOption.None)]
+public int Id { get; set; }   <i>// hodnotu dodává aplikace</i></span></div></div>
+
+    <div class="row"><div><span class="sig">[Timestamp]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Sloupec <code class="inl">rowversion</code> – automatický <b>token optimistické souběžnosti</b>. Při UPDATE se hodnota přidá do WHERE; konflikt vyhodí <code class="inl">DbUpdateConcurrencyException</code>.<span class="ex">[Timestamp]
+public byte[] Verze { get; set; }</span></div></div>
+
+    <div class="row"><div><span class="sig">[ConcurrencyCheck]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Zahrne konkrétní vlastnost do <b>kontroly souběžnosti</b> (WHERE při UPDATE/DELETE) – bez rowversion sloupce. Hodnotu ale musí měnit aplikace sama.</div></div>
+  </section>
+
+  <!-- ================= MAPOVÁNÍ ================= -->
+  <section id="mapovani">
+    <h2>Tabulky, sloupce a mapování typů</h2>
+    <p class="sdesc">Kam a jak se třída či vlastnost mapuje – a co se nemapuje vůbec.</p>
+
+    <div class="row"><div><span class="sig">[Table("blogy", Schema = "web")]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc">Mapuje třídu na <b>konkrétní tabulku</b> (a schéma). Bez atributu se použije název <code class="inl">DbSet</code> vlastnosti.</div></div>
+
+    <div class="row"><div><span class="sig">[Column("blog_id", TypeName = "varchar(200)", Order = 0)]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc">Nastaví <b>název sloupce</b>, jeho <b>databázový typ</b> a <b>pořadí</b> při vytváření tabulky. Vše je volitelné – lze použít jen část.</div></div>
+
+    <div class="row"><div><span class="sig">[Comment("Firemní blogy")]</span><div class="tags"><span class="ns ns-ef">EF Core</span></div></div>
+      <div class="desc">Přidá <b>komentář</b> k tabulce nebo sloupci přímo v databázi (dostane se do migrací). Skvělé pro dokumentaci schématu.</div></div>
+
+    <div class="row"><div><span class="sig">[NotMapped]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc"><b>Vyloučí</b> vlastnost nebo celou třídu z mapování – existuje jen v paměti, v databázi nevznikne.<span class="ex">[NotMapped]
+public string CeleJmeno =&gt; $"{Jmeno} {Prijmeni}";</span></div></div>
+
+    <div class="row"><div><span class="sig">[Keyless]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 5+</span></div></div>
+      <div class="desc">Entita <b>bez primárního klíče</b> – typicky pro databázové <b>pohledy (views)</b> nebo výsledky raw SQL dotazů. Nelze sledovat změny ani ukládat.</div></div>
+
+    <div class="row"><div><span class="sig">[Owned]</span><div class="tags"><span class="ns ns-ef">EF Core</span></div></div>
+      <div class="desc"><b>Vlastněný typ</b> (owned entity) – nemá vlastní identitu, žije uvnitř nadřazené entity. Pro nové projekty dnes zvažte spíše complex types (níže).</div></div>
+
+    <div class="row"><div><span class="sig">[ComplexType]</span><div class="tags"><span class="ns ns-schema">…Schema</span><span class="ver">EF 8+</span></div></div>
+      <div class="desc"><b>Komplexní typ</b> bez identity s hodnotovou sémantikou (např. <code class="inl">Adresa</code>). V EF Core 10 podporuje i <code class="inl">struct</code>, volitelnost (nullable) a mapování do JSON sloupce (<code class="inl">ToJson()</code> přes Fluent API).<span class="ex">[ComplexType]
+public record struct Adresa(string Ulice, string Mesto, string Psc);</span></div></div>
+
+    <div class="row"><div><span class="sig">[EntityTypeConfiguration(typeof(BlogConfig))]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 6+</span></div></div>
+      <div class="desc">Odkáže třídu na její <b>konfigurační třídu</b> <code class="inl">IEntityTypeConfiguration&lt;T&gt;</code> – Fluent API konfigurace se najde sama, bez registrace v <code class="inl">OnModelCreating</code>.</div></div>
+  </section>
+
+  <!-- ================= DÉLKY ================= -->
+  <section id="delky">
+    <h2>Povinnost, délky a přesnost</h2>
+    <p class="sdesc">Atributy tvarující sloupce – NULL/NOT NULL, délky textů, přesnost čísel.</p>
+
+    <div class="row"><div><span class="sig">[Required]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Sloupec bude <b>NOT NULL</b>. Pozor: se zapnutými <b>nullable reference types</b> je non-nullable typ (<code class="inl">string</code>) povinný už konvencí – <code class="inl">[Required]</code> pak dává smysl hlavně pro <code class="inl">string?</code> nebo při vypnutých NRT.</div></div>
+
+    <div class="row"><div><span class="sig">[MaxLength(200)]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc"><b>Maximální délka</b> – z <code class="inl">nvarchar(max)</code> udělá <code class="inl">nvarchar(200)</code>. Funguje pro string i pole bajtů. Preferovaný atribut pro EF.</div></div>
+
+    <div class="row"><div><span class="sig">[StringLength(200, MinimumLength = 3)]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Pro schéma <b>totéž co MaxLength</b> (jen pro string), navíc umí <code class="inl">MinimumLength</code> – ta ale slouží <b>jen validaci</b>, schéma nemění.</div></div>
+
+    <div class="row"><div><span class="sig">[MinLength(3)]</span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc"><span class="warn">Jen validace</span> – na databázové schéma <b>nemá vliv</b> (minimální délku sloupce SQL neumí). Uvádíme pro úplnost.</div></div>
+
+    <div class="row"><div><span class="sig">[Unicode(false)]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 6+</span></div></div>
+      <div class="desc">Vypne Unicode – na SQL Serveru <code class="inl">varchar</code> místo <code class="inl">nvarchar</code> (poloviční místo). Hodí se pro ASCII data: ISBN, kódy, URL.</div></div>
+
+    <div class="row"><div><span class="sig">[Precision(18, 2)]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 6+</span></div></div>
+      <div class="desc"><b>Přesnost a měřítko</b> – <code class="inl">decimal(18,2)</code>. S jedním parametrem funguje i pro datum/čas: <code class="inl">[Precision(3)]</code> → <code class="inl">datetime2(3)</code>.</div></div>
+  </section>
+
+  <!-- ================= VZTAHY ================= -->
+  <section id="vztahy">
+    <h2>Vztahy (relace)</h2>
+    <p class="sdesc">Propojení navigačních vlastností, cizích klíčů a chování při mazání.</p>
+
+    <div class="row"><div><span class="sig">[ForeignKey(nameof(Blog))]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc">Spáruje <b>cizí klíč s navigační vlastností</b>, když neodpovídají konvenci (<code class="inl">BlogId</code>). Lze umístit na FK vlastnost <i>nebo</i> na navigaci.<span class="ex">[ForeignKey(nameof(Blog))]
+public int BlogKlic { get; set; }
+public Blog Blog { get; set; } = null!;</span></div></div>
+
+    <div class="row"><div><span class="sig">[InverseProperty(nameof(Post.Autor))]</span><div class="tags"><span class="ns ns-schema">…Schema</span></div></div>
+      <div class="desc">Spáruje navigaci s její <b>protistranou</b> – nutné, když mezi dvěma typy existuje <b>více vztahů</b> (např. autor a recenzent příspěvků).</div></div>
+
+    <div class="row"><div><span class="sig">[DeleteBehavior(DeleteBehavior.Restrict)]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 7+</span></div></div>
+      <div class="desc">Nastaví <b>chování při smazání principala</b>: <code class="inl">Cascade</code>, <code class="inl">Restrict</code>, <code class="inl">SetNull</code>, <code class="inl">ClientSetNull</code>, <code class="inl">NoAction</code>… Dává se na navigaci na straně závislé entity. Konvence: povinný vztah = Cascade.</div></div>
+
+    <div class="row"><div><span class="sig">[Required] <i style="color:#5f6b80">(na navigaci)</i></span><div class="tags"><span class="ns ns-da">DataAnnotations</span></div></div>
+      <div class="desc">Na navigační vlastnosti označí <b>vztah jako povinný</b> – cizí klíč bude NOT NULL.</div></div>
+  </section>
+
+  <!-- ================= INDEXY ================= -->
+  <section id="indexy">
+    <h2>Indexy – [Index] a Fluent API</h2>
+    <p class="sdesc">Aktuální syntaxe je <b>stejná v .NET 9 (EF Core 9) i .NET 10 (EF Core 10)</b>. Atribut <code class="inl">[Index]</code> se dává <b>na třídu</b> a pochází z <code class="inl">Microsoft.EntityFrameworkCore</code>.</p>
+
+    <div class="grid2">
+      <div class="codebox"><div class="codehead">datové anotace – [Index] na třídě</div>
+<pre class="code"><span class="k">using</span> Microsoft.EntityFrameworkCore;   <span class="c">// ← odsud!</span>
+
+<span class="c">// jednoduchý index</span>
+[<span class="t">Index</span>(<span class="k">nameof</span>(Url))]
+
+<span class="c">// unikátní index</span>
+[<span class="t">Index</span>(<span class="k">nameof</span>(Url), IsUnique = <span class="k">true</span>)]
+
+<span class="c">// složený index (na pořadí záleží!)</span>
+[<span class="t">Index</span>(<span class="k">nameof</span>(Prijmeni), <span class="k">nameof</span>(Jmeno))]
+
+<span class="c">// vlastní název</span>
+[<span class="t">Index</span>(<span class="k">nameof</span>(Url), Name = <span class="s">"IX_Blog_Url"</span>)]
+
+<span class="c">// řazení sloupců (EF 7+)</span>
+[<span class="t">Index</span>(<span class="k">nameof</span>(Url), <span class="k">nameof</span>(Rating),
+       AllDescending = <span class="k">true</span>)]
+[<span class="t">Index</span>(<span class="k">nameof</span>(Url), <span class="k">nameof</span>(Rating),
+       IsDescending = <span class="k">new</span>[] { <span class="k">false</span>, <span class="k">true</span> })]
+<span class="k">public class</span> <span class="t">Blog</span> { … }</pre></div>
+
+      <div class="codebox"><div class="codehead">Fluent API – plná výbava (OnModelCreating)</div>
+<pre class="code">modelBuilder.<span class="f">Entity</span>&lt;<span class="t">Blog</span>&gt;()
+    .<span class="f">HasIndex</span>(b =&gt; <span class="k">new</span> { b.Url, b.Rating })
+    .<span class="f">IsUnique</span>()
+    .<span class="f">IsDescending</span>(<span class="k">false</span>, <span class="k">true</span>)
+    .<span class="f">HasDatabaseName</span>(<span class="s">"IX_Blog_Url_Rating"</span>);
+
+<span class="c">// filtrovaný index – JEN Fluent API</span>
+modelBuilder.<span class="f">Entity</span>&lt;<span class="t">Blog</span>&gt;()
+    .<span class="f">HasIndex</span>(b =&gt; b.Url)
+    .<span class="f">HasFilter</span>(<span class="s">"[Url] IS NOT NULL"</span>);
+
+<span class="c">// included sloupce – JEN Fluent API</span>
+modelBuilder.<span class="f">Entity</span>&lt;<span class="t">Post</span>&gt;()
+    .<span class="f">HasIndex</span>(p =&gt; p.Url)
+    .<span class="f">IncludeProperties</span>(p =&gt; <span class="k">new</span> { p.Title });
+
+<span class="c">// více indexů nad stejnými sloupci → názvy</span>
+modelBuilder.<span class="f">Entity</span>&lt;<span class="t">Person</span>&gt;()
+    .<span class="f">HasIndex</span>(p =&gt; <span class="k">new</span> { p.Prijmeni }, <span class="s">"IX_Asc"</span>);</pre></div>
+    </div>
+
+    <div class="note"><b>Pozor na záměnu s EF6:</b> starý Entity Framework 6 měl <code class="inl">[Index]</code> ze <code class="inl">System.ComponentModel.DataAnnotations.Schema</code> a dával se <b>na vlastnost</b>. V EF Core tento atribut <b>neexistuje</b> – používá se <code class="inl">[Index]</code> z <code class="inl">Microsoft.EntityFrameworkCore</code> <b>na úrovni třídy</b>.</div>
+    <div class="note green"><b>Konvence:</b> na sloupce cizích klíčů vytváří EF Core index <b>automaticky</b>. Výchozí název indexu je <code class="inl">IX_&lt;Tabulka&gt;_&lt;Sloupce&gt;</code>.</div>
+    <div class="note amber"><b>.NET 9 vs .NET 10:</b> syntaxe indexů (i všech anotací výše) je v EF Core 9 a EF Core 10 <b>totožná</b>. Jen připomínka: .NET 9 je STS s koncem podpory v květnu 2026 – pro nové projekty volte .NET 10 (LTS do listopadu 2028).</div>
+  </section>
+
+  <!-- ================= OSTATNÍ ================= -->
+  <section id="ostatni">
+    <h2>Ostatní</h2>
+    <p class="sdesc">Méně časté, ale užitečné.</p>
+
+    <div class="row"><div><span class="sig">[BackingField(nameof(_url))]</span><div class="tags"><span class="ns ns-ef">EF Core</span><span class="ver">EF 5+</span></div></div>
+      <div class="desc">Určí <b>backing field</b>, do kterého má EF číst/zapisovat místo vlastnosti – hodí se pro zapouzdření (vlastnost jen pro čtení, logika v setteru…).</div></div>
+
+    <div class="row"><div><span class="sig">[DbFunction]</span><div class="tags"><span class="ns ns-ef">EF Core</span></div></div>
+      <div class="desc">Namapuje <b>statickou C# metodu na databázovou funkci</b>, aby šla volat v LINQ dotazech a přeložila se do SQL.</div></div>
+  </section>
+
+  <!-- ================= VALIDACE ================= -->
+  <section id="validace">
+    <h2>Pozor: atributy, které schéma NEmění</h2>
+    <p class="sdesc">Tyto validační atributy z <code class="inl">System.ComponentModel.DataAnnotations</code> využívá ASP.NET Core (model binding, Blazor formuláře) – <b>EF Core je při tvorbě schématu ignoruje</b>. Na školení je dobré tento rozdíl zdůraznit.</p>
+    <div class="chips">
+      <span class="chip">[Range(1, 100)]</span>
+      <span class="chip">[RegularExpression(…)]</span>
+      <span class="chip">[EmailAddress]</span>
+      <span class="chip">[Phone]</span>
+      <span class="chip">[Url]</span>
+      <span class="chip">[CreditCard]</span>
+      <span class="chip">[Compare(…)]</span>
+      <span class="chip">[DataType(…)]</span>
+      <span class="chip">[Display(…)]</span>
+      <span class="chip">[DisplayFormat(…)]</span>
+      <span class="chip">[MinLength(…)]</span>
+    </div>
+    <div class="note amber" style="margin-top:16px">Výjimky, které schéma <b>mění</b>, jsou popsané výše: <code class="inl">[Required]</code> (NOT NULL) a <code class="inl">[MaxLength]</code> / <code class="inl">[StringLength]</code> (délka sloupce).</div>
+  </section>
+
+  <footer>
+    Zdroje: <a href="https://learn.microsoft.com/en-us/ef/core/modeling/entity-properties">Entity Properties</a> ·
+    <a href="https://learn.microsoft.com/en-us/ef/core/modeling/indexes">Indexes</a> ·
+    <a href="https://learn.microsoft.com/en-us/ef/core/modeling/keys">Keys</a> ·
+    <a href="https://learn.microsoft.com/en-us/ef/core/modeling/relationships/mapping-attributes">Relationship mapping attributes</a> ·
+    <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore?view=efcore-10.0">API reference Microsoft.EntityFrameworkCore (EF Core 10)</a><br>
+    Doplňkový materiál ke školení Entity Framework Core 10 · 2026
+  </footer>
+</div>
+
+<script>
+const filtr = document.getElementById('filtr');
+const rows = [...document.querySelectorAll('.row')];
+const sections = [...document.querySelectorAll('section')];
+const pocet = document.getElementById('pocet');
+function aplikuj(){
+  const q = filtr.value.trim().toLowerCase();
+  let shown = 0;
+  rows.forEach(r => {
+    const ok = !q || r.textContent.toLowerCase().includes(q);
+    r.classList.toggle('hide', !ok);
+    if (ok) shown++;
+  });
+  sections.forEach(s => {
+    const rs = s.querySelectorAll('.row');
+    if (!rs.length) { s.style.display = !q || s.textContent.toLowerCase().includes(q) ? '' : 'none'; return; }
+    s.style.display = [...rs].some(r => !r.classList.contains('hide')) ? '' : 'none';
+  });
+  pocet.textContent = q ? `${shown} / ${rows.length} atributů` : `${rows.length} atributů`;
+}
+filtr.addEventListener('input', aplikuj);
+aplikuj();
+</script>
+</body>
+</html>
