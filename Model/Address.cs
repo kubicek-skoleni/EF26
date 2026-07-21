@@ -10,12 +10,12 @@ public class Address
 {
     public int Id { get; set; }
 
-    [MaxLength(10)]
+    [MaxLength(100)]
     public string Street { get; set; }
     
     [MaxLength(100)]
     public string City { get; set; }
 
-    [MaxLength(10)]
+    [MaxLength(20)]
     public string ZipCode { get; set; }
 }

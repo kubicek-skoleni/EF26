@@ -11,7 +11,7 @@ using Model;
 namespace EF26;
 public class SeedData
 {
-    public static List<Person> LoadDataFromJson(string path = "data.json")
+    public static List<Person> LoadDataFromJson(string path = "data2024.json")
     {
         var jsonString = File.ReadAllText(path);
         return JsonSerializer.Deserialize<List<Person>>(jsonString);
