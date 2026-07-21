@@ -9,10 +9,11 @@ using Model;
 namespace EF26;
 internal class Examples
 {
-    public void AddPerson()
+    public static void AddPerson()
     {
         var person = new Person
         {
+            Id = 0, // - při přidávání nového záznamu se Id nastavuje na 0, aby EF věděl, že se jedná o nový záznam
             FirstName = "John",
             LastName = "Doe",
             DateOfBirth = new DateTime(1990, 1, 1),
