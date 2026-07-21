@@ -7,7 +7,7 @@ var db = new PeopleDbContext();
 int id = 6000;
 
 var person = db.Persons
-    .Include(x => x.Address)
+    .Include(x => x.Address)//.ThenInclude(x => ).ThenInclude
     .Include(x => x.Contracts)
     .Where(p => p.Id == id)
     .SingleOrDefault();
